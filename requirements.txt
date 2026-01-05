@@ -1,0 +1,9 @@
+fastapi[standard]
+markupsafe
+jinja2
+pypdf
+python-multipart
+pandas
+openpyxl
+numpy
+uvicorn

@@ -1,4 +1,4 @@
-from .library.utils import extract_key, get_store_names
+from app.library.utils import extract_key, get_store_names
 import jinja2
 import os
 import re
@@ -11,29 +11,30 @@ from pypdf import PdfReader
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 
-TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
+TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "app", "templates")
 environment = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR))
-template_index = environment.from_string("Hello, {{ name }}!")
+template_index = environment.get_template("index.html")
 template_work = environment.get_template("work.html")
+template_sales = environment.get_template("sales.html")
 
 app = FastAPI()
 
 
 @app.get("/")
 async def root():
-    message = "This is an example of FastAPI with Jinja2 - go to /hi/<name> to see a template rendered"
-    return {"message": message}
-
-
-@app.get("/hi/{name}")
-async def say_hi(name: str):
-    message = template_index.render(name=name)
-    return {"message": message}
+    html = template_index.render()
+    return HTMLResponse(content=html)
 
 
 @app.get("/work")
 async def work_get():
     html = template_work.render()
+    return HTMLResponse(content=html)
+
+
+@app.get("/sales")
+async def sales_get():
+    html = template_sales.render()
     return HTMLResponse(content=html)
 
 
@@ -187,4 +188,4 @@ async def work_post(
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=5000)
