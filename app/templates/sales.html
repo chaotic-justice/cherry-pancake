@@ -3,18 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salesperson Performance | WIP</title>
+    <title>Salesperson Performance | Analysis</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #6366f1;
+            --secondary: #ec4899;
             --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             --glass-bg: rgba(255, 255, 255, 0.05);
             --glass-border: rgba(255, 255, 255, 0.1);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
+            --success: #22c55e;
+            --error: #ef4444;
         }
 
         * {
@@ -35,7 +38,8 @@
         }
 
         .container {
-            text-align: center;
+            width: 100%;
+            max-width: 800px;
             animation: fadeIn 0.8s ease-out;
         }
 
@@ -49,39 +53,107 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
-            border-radius: 32px;
-            padding: 5rem 3rem;
-            max-width: 600px;
+            border-radius: 24px;
+            padding: 3rem;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
-        .wip-icon {
-            font-size: 5rem;
-            margin-bottom: 2rem;
-            display: inline-block;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(129, 140, 248, 0)); }
-            50% { transform: scale(1.05); filter: drop-shadow(0 0 20px rgba(129, 140, 248, 0.3)); }
-            100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(129, 140, 248, 0)); }
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
         }
 
         h1 {
-            font-size: 3rem;
-            margin-bottom: 1.5rem;
-            background: linear-gradient(to right, #818cf8, #c084fc);
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #818cf8, #c084fc, #f472b6);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        p {
+        p.subtitle {
             color: var(--text-muted);
-            font-size: 1.25rem;
-            margin-bottom: 3rem;
-            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        .feature-box {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 2rem;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            cursor: pointer;
+            margin-bottom: 2rem;
+        }
+
+        input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .custom-file-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px dashed var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .file-input-wrapper:hover .custom-file-btn {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+            color: var(--text-main);
+        }
+
+        .file-input-wrapper.active .custom-file-btn {
+            border-color: var(--success);
+            background: rgba(34, 197, 94, 0.05);
+            color: var(--text-main);
+        }
+
+        .submit-btn {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(1);
         }
 
         .back-btn {
@@ -95,6 +167,7 @@
             border-radius: 12px;
             font-weight: 600;
             transition: all 0.3s ease;
+            margin-top: 1rem;
         }
 
         .back-btn:hover {
@@ -102,21 +175,162 @@
             filter: brightness(1.1);
             box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
         }
+
+        .validation-section {
+            margin-top: 2rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .validation-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+        }
+
+        .validation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .validation-item.matched {
+            border-left-color: var(--success);
+        }
+
+        .validation-item.unmatched {
+            border-left-color: var(--error);
+        }
+
+        .validation-label {
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .validation-values {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .validation-value {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .validation-value-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .validation-value-number {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .match-indicator {
+            font-size: 1.5rem;
+        }
+
+        .match-indicator.matched {
+            color: var(--success);
+        }
+
+        .match-indicator.unmatched {
+            color: var(--error);
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="card">
-        <div class="wip-icon">🚀</div>
-        <h1>Coming Soon</h1>
-        <p>We're building a powerful Salesperson Performance analysis tool. This feature will be available shortly.</p>
+        <header>
+            <h1>Salesperson Performance</h1>
+            <p class="subtitle">Upload sales data for analysis</p>
+        </header>
+
+        <div class="feature-box">
+            <form action="/sales" method="post" enctype="multipart/form-data" id="sales-form">
+                <div class="file-input-wrapper" id="file-wrapper">
+                    <div class="custom-file-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <span id="file-label">Select Excel file (.xlsx)</span>
+                    </div>
+                    <input type="file" name="file" id="file-input" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required onchange="handleFileChange(this)">
+                </div>
+
+                <button type="submit" class="submit-btn" id="analyze-btn" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Analyze & Download Excel
+                </button>
+            </form>
+        </div>
+
+        {% if validation %}
+        <div class="validation-section">
+            <h2>Validation Results</h2>
+            {% for key, result in validation.items() %}
+            <div class="validation-item {{ 'matched' if result.matched else 'unmatched' }}">
+                <div class="validation-label">{{ key.replace('-', ' ').title() }}</div>
+                <div class="validation-values">
+                    <div class="validation-value">
+                        <span class="validation-value-label">Expected</span>
+                        <span class="validation-value-number">{{ "{:,.2f}".format(result.expected) }}</span>
+                    </div>
+                    <div class="validation-value">
+                        <span class="validation-value-label">Actual</span>
+                        <span class="validation-value-number">{{ "{:,.2f}".format(result.actual) }}</span>
+                    </div>
+                    <div class="match-indicator {{ 'matched' if result.matched else 'unmatched' }}">
+                        {{ '✓' if result.matched else '✗' }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <a href="/sales/download" class="submit-btn" style="display: block; text-align: center; text-decoration: none; margin-top: 2rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download Excel Report
+            </a>
+        </div>
+        {% endif %}
+
         <a href="/" class="back-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
             Back to Toolbox
         </a>
     </div>
 </div>
+
+<script>
+    const fileInput = document.getElementById('file-input');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const fileWrapper = document.getElementById('file-wrapper');
+    const fileLabel = document.getElementById('file-label');
+
+    function handleFileChange(input) {
+        if (input.files && input.files.length > 0) {
+            fileLabel.textContent = input.files[0].name;
+            fileWrapper.classList.add('active');
+            analyzeBtn.disabled = false;
+        } else {
+            fileLabel.textContent = 'Select Excel file (.xlsx)';
+            fileWrapper.classList.remove('active');
+            analyzeBtn.disabled = true;
+        }
+    }
+</script>
 
 </body>
 </html>
