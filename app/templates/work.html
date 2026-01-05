@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toolbox | PDF & Store Analysis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary: #ec4899;
+            --secondary-hover: #db2777;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #818cf8, #c084fc, #f472b6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .feature-box {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 1px solid var(--glass-border);
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .input-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            cursor: pointer;
+        }
+
+        input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .custom-file-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px dashed var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .file-input-wrapper:hover .custom-file-btn {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+            color: var(--text-main);
+        }
+
+        .file-input-wrapper.active .custom-file-btn {
+            border-color: var(--success);
+            background: rgba(34, 197, 94, 0.05);
+            color: var(--text-main);
+        }
+
+        .custom-file-btn svg {
+            transition: transform 0.3s ease;
+        }
+
+        .file-input-wrapper:hover .custom-file-btn svg {
+            transform: translateY(-3px);
+        }
+
+        .submit-btn {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            margin-top: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+
+        .results-section {
+            margin-top: 3rem;
+            border-top: 1px solid var(--glass-border);
+            padding-top: 2rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-total {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem;
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--glass-border);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .amount-col {
+            text-align: right;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .icon-badge {
+            background: rgba(99, 102, 241, 0.1);
+            padding: 8px;
+            border-radius: 10px;
+            color: var(--primary);
+            display: inline-flex;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <header>
+            <h1>Costco Analyzer</h1>
+            <p class="subtitle">Aggregate Payment Reports & Store Mapping</p>
+        </header>
+
+        <div class="feature-box">
+            <form action="/work" method="post" enctype="multipart/form-data" id="analysis-form">
+                <div class="form-grid">
+                    <!-- Store Data Input -->
+                    <div class="input-group">
+                        <span class="input-label">1. Store Mapping (.csv, .xlsx)</span>
+                        <div class="file-input-wrapper" id="store-wrapper">
+                            <div class="custom-file-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                                <span id="store-label">Select .csv or .xlsx</span>
+                            </div>
+                            <input type="file" name="store_file" id="store-input" accept=".csv, .xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" required onchange="handleFileChange(this, 'store-label', 'store-wrapper')">
+                        </div>
+                    </div>
+
+                    <!-- PDF Input -->
+                    <div class="input-group">
+                        <span class="input-label">2. Payment Reports (.pdf)</span>
+                        <div class="file-input-wrapper" id="pdf-wrapper">
+                            <div class="custom-file-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                <span id="pdf-label">Select PDF files (max 30)</span>
+                            </div>
+                            <input type="file" name="files" id="pdf-input" multiple accept="application/pdf" required onchange="handleFileChange(this, 'pdf-label', 'pdf-wrapper')">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="download-btn" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Analyze & Download Excel
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const storeInput = document.getElementById('store-input');
+    const pdfInput = document.getElementById('pdf-input');
+    const downloadBtn = document.getElementById('download-btn');
+
+    function handleFileChange(input, labelId, wrapperId) {
+        const label = document.getElementById(labelId);
+        const wrapper = document.getElementById(wrapperId);
+
+        if (input.files && input.files.length > 0) {
+            if (input.id === 'pdf-input' && input.files.length > 30) {
+                label.textContent = 'Too many files (max 30)';
+                label.style.color = '#ef4444';
+                wrapper.classList.remove('active');
+            } else {
+                label.textContent = input.files.length === 1 ? input.files[0].name : input.files.length + ' files selected';
+                label.style.color = '';
+                wrapper.classList.add('active');
+            }
+        } else {
+            label.textContent = input.id === 'store-input' ? 'Select .csv or .xlsx' : 'Select PDF files (max 30)';
+            label.style.color = '';
+            wrapper.classList.remove('active');
+        }
+
+        const hasStore = storeInput.files && storeInput.files.length > 0;
+        const pdfCount = pdfInput.files ? pdfInput.files.length : 0;
+        const validPdfCount = pdfCount > 0 && pdfCount <= 30;
+
+        downloadBtn.disabled = !hasStore || !validPdfCount;
+    }
+</script>
+
+</body>
+</html>

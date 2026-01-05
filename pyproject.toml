@@ -1,0 +1,20 @@
+[project]
+name = "fastapi-worker"
+version = "0.1.0"
+description = "Python fastapi example"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]",
+    "markupsafe",
+    "jinja2",
+    "pypdf",
+    "python-multipart",
+    "pandas",
+    "openpyxl",
+    "numpy",
+    "uvicorn",
+]
+
+[dependency-groups]
+dev = []
