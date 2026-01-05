@@ -1,4 +1,4 @@
-from .lib.utils import extract_key, get_store_names
+from .library.utils import extract_key, get_store_names
 import jinja2
 import os
 import re
