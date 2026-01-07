@@ -35,7 +35,6 @@ async def process_costco_analysis(
             status_code=400,
         )
 
-    aggregated_data = []
     store_mapping = {}
     detailed_dataframes = {}
 
@@ -164,7 +163,6 @@ async def process_costco_analysis(
                 except Exception as _:
                     filename = file.filename
                 detailed_dataframes[filename] = (df, df2)
-                aggregated_data.append(df[["storeName", "amount"]])
 
             except Exception as e:
                 # Log or ignore error for specific file but keep going
@@ -173,27 +171,8 @@ async def process_costco_analysis(
 
                 traceback.print_exc()
 
-    # if not aggregated_data:
-    #     return HTMLResponse(
-    #         content="No valid transaction data found in uploaded PDFs.", status_code=400
-    #     )
-
-    # 3. Aggregate results
-    # final_df = pd.concat(aggregated_data)
-    # summary_df = final_df.groupby("storeName", as_index=False).sum()
-    # summary_df = summary_df.sort_values("amount", ascending=False)
-    # store_summary = summary_df.to_dict("records")
-
     # 4. Generate Excel
     wb = Workbook()
-    # Summary Sheet
-    # ws_summary = wb.active
-    # ws_summary.title = "Aggregated Summary"
-    # ws_summary.append(["Store Name", "Total Amount"])
-    # for entry in store_summary:
-    #     ws_summary.append([entry["storeName"], entry["amount"]])
-
-    # Detail Sheets
     for filename, df_pair in detailed_dataframes.items():
         df, df2 = df_pair
         safe_name = re.sub(r"[\\*?:/\[\]]", "", filename)[:31]
@@ -211,6 +190,10 @@ async def process_costco_analysis(
         ws.append(["Total", total])
         ws.append(["Date", rdate])
         ws.append(["Check Number", rcheck])
+
+    # Remove the default blank sheet created by Workbook()
+    if "Sheet" in wb.sheetnames:
+        wb.remove(wb["Sheet"])
 
     # Save to buffer
     output = BytesIO()
