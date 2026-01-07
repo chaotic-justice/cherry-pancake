@@ -6,7 +6,7 @@ from typing import List, Optional
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse
 
-TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "app", "templates")
+TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
 environment = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR))
 template_index = environment.get_template("index.html")
 template_costco = environment.get_template("costco.html")

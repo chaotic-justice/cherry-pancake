@@ -1,5 +1,5 @@
 [project]
-name = "fastapi-worker"
+name = "cherry-pancake"
 version = "0.1.0"
 description = "Python fastapi example"
 readme = "README.md"
@@ -8,13 +8,13 @@ dependencies = [
     "fastapi[standard]",
     "markupsafe",
     "jinja2",
-    "pypdf",
     "python-multipart",
     "pandas",
     "openpyxl",
     "numpy",
     "uvicorn",
     "xlrd>=2.0.2",
+    "pdfplumber",
 ]
 
 [dependency-groups]

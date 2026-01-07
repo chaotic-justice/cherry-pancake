@@ -4,10 +4,15 @@ from typing import List, Optional
 from fastapi import File, UploadFile
 from fastapi.responses import HTMLResponse, StreamingResponse
 from io import BytesIO
-from pypdf import PdfReader
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
-from app.library.utils import extract_key, get_store_names
+from app.library.utils import (
+    extract_key,
+    get_store_names,
+    extract_mm_dd,
+    extract_payment_id,
+    get_today_date,
+)
 
 
 async def process_costco_analysis(
@@ -67,32 +72,65 @@ async def process_costco_analysis(
 
             content = await file.read()
             try:
-                reader = PdfReader(BytesIO(content))
+                import pdfplumber
+
                 file_rows = []
+                date_check_num = []
 
-                for page in reader.pages:
-                    text = page.extract_text()
-                    lines = text.split("\n")
-                    for line in lines:
-                        parts = line.split()
-
-                        # Find the date index
-                        date_idx = -1
-                        for i, p in enumerate(parts):
-                            if re.match(r"\d{1,2}/\d{1,2}/\d{4}", p):
-                                date_idx = i
+                with pdfplumber.open(BytesIO(content)) as pdf:
+                    # Extract date and payment number from first page
+                    first_page_text = pdf.pages[0].extract_text()
+                    for line in first_page_text.split("\n"):
+                        if line.startswith("Date"):
+                            matched, res = extract_mm_dd(line)
+                            if matched:
+                                date_check_num.append(res)
+                        elif line.startswith("Payment"):
+                            matched, res = extract_payment_id(line)
+                            if matched:
+                                date_check_num.append(res)
                                 break
 
-                        if date_idx != -1 and len(parts) > date_idx:
-                            invoice = parts[0]
-                            amount_str = parts[-1].replace(",", "")
-                            try:
-                                amount = float(amount_str)
-                                file_rows.append(
-                                    {"invoiceNumber": invoice, "amount": amount}
-                                )
-                            except (ValueError, TypeError):
+                    # Extract tables from all pages
+                    for page in pdf.pages:
+                        tables = page.extract_tables()
+
+                        for table in tables:
+                            if not table or len(table) < 2:
                                 continue
+
+                            # Skip header row (first row)
+                            for row in table[1:]:
+                                if not row or len(row) < 7:
+                                    continue
+
+                                try:
+                                    invoice = row[0] if row[0] else ""
+                                    order_number = row[1] if row[1] else ""
+                                    description = row[2] if row[2] else ""
+                                    date = row[3] if row[3] else ""
+                                    # Skip gross amount (row[4]) and discount (row[5])
+                                    amount_str = row[6] if row[6] else "0"
+
+                                    # Clean and convert amount
+                                    amount_str = amount_str.replace(",", "").strip()
+                                    if not amount_str or not invoice:
+                                        continue
+
+                                    amount = float(amount_str)
+
+                                    file_rows.append(
+                                        {
+                                            "invoiceNumber": invoice.strip(),
+                                            "orderNumber": order_number.strip(),
+                                            "description": description.strip(),
+                                            "date": date.strip(),
+                                            "amount": amount,
+                                        }
+                                    )
+                                except (ValueError, TypeError, IndexError) as e:
+                                    # Skip rows that can't be parsed
+                                    continue
 
                 if not file_rows:
                     continue
@@ -118,49 +156,70 @@ async def process_costco_analysis(
                         df.at[idx, "storeKey"] = skey
                         df.at[idx, "storeName"] = sval
 
-                detailed_dataframes[file.filename] = df
+                df2 = df[["storeName", "amount"]].copy()
+                df2 = df2.groupby("storeName", as_index=False).sum()
+
+                try:
+                    filename = f"{date_check_num[0]} #{date_check_num[1]}"
+                except Exception as _:
+                    filename = file.filename
+                detailed_dataframes[filename] = (df, df2)
                 aggregated_data.append(df[["storeName", "amount"]])
 
             except Exception as e:
                 # Log or ignore error for specific file but keep going
                 print(f"Error processing {file.filename}: {e}")
+                import traceback
 
-    if not aggregated_data:
-        return HTMLResponse(
-            content="No valid transaction data found in uploaded PDFs.", status_code=400
-        )
+                traceback.print_exc()
+
+    # if not aggregated_data:
+    #     return HTMLResponse(
+    #         content="No valid transaction data found in uploaded PDFs.", status_code=400
+    #     )
 
     # 3. Aggregate results
-    final_df = pd.concat(aggregated_data)
-    summary_df = final_df.groupby("storeName", as_index=False).sum()
-    summary_df = summary_df.sort_values("amount", ascending=False)
-    store_summary = summary_df.to_dict("records")
+    # final_df = pd.concat(aggregated_data)
+    # summary_df = final_df.groupby("storeName", as_index=False).sum()
+    # summary_df = summary_df.sort_values("amount", ascending=False)
+    # store_summary = summary_df.to_dict("records")
 
     # 4. Generate Excel
     wb = Workbook()
     # Summary Sheet
-    ws_summary = wb.active
-    ws_summary.title = "Aggregated Summary"
-    ws_summary.append(["Store Name", "Total Amount"])
-    for entry in store_summary:
-        ws_summary.append([entry["storeName"], entry["amount"]])
+    # ws_summary = wb.active
+    # ws_summary.title = "Aggregated Summary"
+    # ws_summary.append(["Store Name", "Total Amount"])
+    # for entry in store_summary:
+    #     ws_summary.append([entry["storeName"], entry["amount"]])
 
     # Detail Sheets
-    for filename, df in detailed_dataframes.items():
+    for filename, df_pair in detailed_dataframes.items():
+        df, df2 = df_pair
         safe_name = re.sub(r"[\\*?:/\[\]]", "", filename)[:31]
         ws = wb.create_sheet(title=safe_name)
         for row in dataframe_to_rows(df, index=False, header=True):
             ws.append(row)
+
         ws.append([])
-        ws.append(["Total", df["amount"].sum()])
+        for row in dataframe_to_rows(df2, index=False, header=True):
+            ws.append(row)
+
+        rdate, rcheck = filename.split()
+        ws.append([])
+        total = df2["amount"].sum()
+        ws.append(["Total", total])
+        ws.append(["Date", rdate])
+        ws.append(["Check Number", rcheck])
 
     # Save to buffer
     output = BytesIO()
     wb.save(output)
     output.seek(0)
 
+    today = get_today_date()
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=Costco_Analysis.xlsx"},
+        headers={"Content-Disposition": f"attachment; filename=Costco_{today}.xlsx"},
     )

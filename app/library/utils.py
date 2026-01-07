@@ -2,6 +2,12 @@ import pandas as pd
 import re
 from collections import defaultdict
 from typing import Optional, Dict, Tuple
+from datetime import date
+
+
+def get_today_date():
+    today = date.today()
+    return today.strftime("%m-%d-%y")
 
 
 def to_camel_case(text: str) -> str:
@@ -18,14 +24,14 @@ def extract_mm_dd(text: str) -> Tuple[bool, Optional[str]]:
     """Extracts MM/DD from text like 'Date: 01/04/2026'."""
     match = re.search(r"(\d{1,2}/\d{1,2})", text)
     if match:
-        return True, match.group(1)
+        return True, match.group(1).replace("/", "-")
     return False, None
 
 
 def extract_payment_id(text: str) -> Tuple[bool, Optional[str]]:
     """Extracts payment/check ID from text."""
     # Look for patterns like #123456 or similar
-    match = re.search(r"#(\d+)", text)
+    match = re.search(r"(\d+)", text)
     if match:
         return True, match.group(1)
     return False, None
