@@ -5,6 +5,10 @@ from typing import Optional, Dict, Tuple
 from datetime import date
 
 
+def is_within_ndays(d1, d2, n=2):
+    return abs((d1 - d2).days) <= n
+
+
 def get_today_date():
     today = date.today()
     return today.strftime("%m-%d-%y")

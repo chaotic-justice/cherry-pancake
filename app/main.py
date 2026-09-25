@@ -1,4 +1,5 @@
 from app.routes.costco import process_costco_analysis
+from app.routes.raccoon import process_raccoon_analysis
 from app.routes.sales import process_sales_analysis
 import jinja2
 import os
@@ -7,15 +8,16 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
-environment = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR))
+environment = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(TEMPLATE_DIR),
+    autoescape=jinja2.select_autoescape(["html"]),
+)
 template_index = environment.get_template("index.html")
 template_costco = environment.get_template("costco.html")
+template_raccoon = environment.get_template("raccoon.html")
 template_sales = environment.get_template("sales.html")
 
 app = FastAPI()
-
-# Store the last analysis result temporarily (in production, use session/cache)
-last_sales_analysis = {}
 
 
 @app.get("/")
@@ -36,6 +38,11 @@ async def sales_get():
     return HTMLResponse(content=html)
 
 
+@app.get("/raccoon")
+async def raccoon_get():
+    return HTMLResponse(content=template_raccoon.render())
+
+
 @app.post("/costco")
 async def costco_post(
     files: Optional[List[UploadFile]] = File(None),
@@ -45,33 +52,24 @@ async def costco_post(
     return await process_costco_analysis(files, store_file)
 
 
+@app.post("/raccoon")
+async def raccoon_post(
+    files: Optional[List[UploadFile]] = File(None),
+    ar_files: Optional[List[UploadFile]] = File(None),
+):
+    return await process_raccoon_analysis(files or [], ar_files or [], template_raccoon)
+
+
 @app.post("/sales")
 async def sales_post(
     file: Optional[UploadFile] = File(None),
 ):
-    """Process Sales analysis and display validation results"""
-    response, validation = await process_sales_analysis(file)
-
-    # Store the response for download
-    global last_sales_analysis
-    last_sales_analysis = {"response": response, "validation": validation}
-
-    # Render template with validation results
-    html = template_sales.render(validation=validation, show_download=True)
-    return HTMLResponse(content=html)
-
-
-@app.get("/sales/download")
-async def sales_download():
-    """Download the last generated sales analysis Excel file"""
-    if last_sales_analysis and "response" in last_sales_analysis:
-        return last_sales_analysis["response"]
-    return HTMLResponse(
-        content="No analysis available. Please upload a file first.", status_code=400
-    )
+    """Process Sales analysis and download the generated workbook."""
+    response, _ = await process_sales_analysis(file)
+    return response
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    uvicorn.run(app, host="127.0.0.1", port=5000)
