@@ -1,8 +1,7 @@
 import re
 import pandas as pd
-from typing import List, Optional
-from fastapi import File, UploadFile
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi import UploadFile
+from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from io import BytesIO
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -15,14 +14,14 @@ from app.library.utils import (
 )
 
 MAX_FILES = 30
-MAX_FILE_SIZE = 25 * 1024 * 1024
+MAX_FILE_SIZE = 5 * 1024 * 1024
 STORE_SUFFIXES = (".csv", ".xls", ".xlsx")
 
 
 def process_costco_analysis(
-    files: Optional[List[UploadFile]] = File(None),
-    store_file: Optional[UploadFile] = File(None),
-):
+    files: list[UploadFile] | None = None,
+    store_file: UploadFile | None = None,
+) -> Response:
     """
     Process Costco PDF payment reports and generate an Excel analysis.
 
@@ -44,7 +43,7 @@ def process_costco_analysis(
         )
 
     store_mapping = {}
-    detailed_dataframes = {}
+    detailed_dataframes = []
 
     # 1. Load Store Mapping
     if store_file and store_file.filename:
@@ -56,7 +55,7 @@ def process_costco_analysis(
             content = store_file.file.read(MAX_FILE_SIZE + 1)
             if len(content) > MAX_FILE_SIZE:
                 return HTMLResponse(
-                    content="Store mapping file must be 25 MB or smaller.",
+                    content="Store mapping file must be 100 MB or smaller.",
                     status_code=400,
                 )
             filename = store_file.filename.lower()
@@ -72,7 +71,10 @@ def process_costco_analysis(
             store_mapping = get_store_names(df=df_stores)
         except Exception:
             return HTMLResponse(
-                content="Could not read the store mapping file. Check that it is a valid CSV or Excel file.",
+                content=(
+                    "Could not read the store mapping file. "
+                    "Check that it is a valid CSV or Excel file."
+                ),
                 status_code=400,
             )
     else:
@@ -92,7 +94,7 @@ def process_costco_analysis(
             content = file.file.read(MAX_FILE_SIZE + 1)
             if len(content) > MAX_FILE_SIZE:
                 return HTMLResponse(
-                    content=f"{file.filename} must be 25 MB or smaller.",
+                    content=f"{file.filename} must be 100 MB or smaller.",
                     status_code=400,
                 )
             try:
@@ -152,12 +154,19 @@ def process_costco_analysis(
                                             "amount": amount,
                                         }
                                     )
-                                except (ValueError, TypeError, IndexError) as e:
-                                    # Skip rows that can't be parsed
-                                    continue
+                                except (ValueError, TypeError, IndexError):
+                                    return HTMLResponse(
+                                        content=(
+                                            f"Could not parse a payment row in {file.filename}."
+                                        ),
+                                        status_code=400,
+                                    )
 
                 if not file_rows:
-                    continue
+                    return HTMLResponse(
+                        content=f"No payment rows were found in {file.filename}.",
+                        status_code=400,
+                    )
 
                 df = pd.DataFrame(file_rows)
 
@@ -187,7 +196,7 @@ def process_costco_analysis(
                     filename = f"{date_check_num[0]} #{date_check_num[1]}"
                 except Exception as _:
                     filename = file.filename
-                detailed_dataframes[filename] = (df, df2)
+                detailed_dataframes.append((filename, df, df2))
 
             except Exception:
                 return HTMLResponse(
@@ -203,8 +212,7 @@ def process_costco_analysis(
 
     # 4. Generate Excel
     wb = Workbook()
-    for filename, df_pair in detailed_dataframes.items():
-        df, df2 = df_pair
+    for filename, df, df2 in detailed_dataframes:
         safe_name = re.sub(r"[\\*?:/\[\]]", "", filename)[:31]
         ws = wb.create_sheet(title=safe_name)
         for row in dataframe_to_rows(df, index=False, header=True):

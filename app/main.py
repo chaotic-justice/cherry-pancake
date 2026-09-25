@@ -3,9 +3,9 @@ from app.routes.raccoon import process_raccoon_analysis
 from app.routes.sales import process_sales_analysis
 import jinja2
 import os
-from typing import List, Optional
+from typing import Annotated
 from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
@@ -17,6 +17,11 @@ template_index = environment.get_template("index.html")
 template_costco = environment.get_template("costco.html")
 template_raccoon = environment.get_template("raccoon.html")
 template_sales = environment.get_template("sales.html")
+EXCEL_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+DOWNLOAD_RESPONSES = {
+    200: {"content": {EXCEL_MEDIA_TYPE: {}}},
+    400: {"content": {"text/html": {}}},
+}
 
 app = FastAPI()
 app.mount(
@@ -26,50 +31,58 @@ app.mount(
 )
 
 
-@app.get("/")
-async def root():
+@app.get("/", response_class=HTMLResponse)
+def root() -> HTMLResponse:
     html = template_index.render()
     return HTMLResponse(content=html)
 
 
-@app.get("/costco")
-async def costco_get():
+@app.get("/costco", response_class=HTMLResponse)
+def costco_get() -> HTMLResponse:
     html = template_costco.render()
     return HTMLResponse(content=html)
 
 
-@app.get("/sales")
-async def sales_get():
+@app.get("/sales", response_class=HTMLResponse)
+def sales_get() -> HTMLResponse:
     html = template_sales.render()
     return HTMLResponse(content=html)
 
 
-@app.get("/raccoon")
-async def raccoon_get():
+@app.get("/raccoon", response_class=HTMLResponse)
+def raccoon_get() -> HTMLResponse:
     return HTMLResponse(content=template_raccoon.render())
 
 
-@app.post("/costco")
+@app.post(
+    "/costco",
+    response_class=Response,
+    responses=DOWNLOAD_RESPONSES,
+)
 def costco_post(
-    files: Optional[List[UploadFile]] = File(None),
-    store_file: Optional[UploadFile] = File(None),
-):
+    files: Annotated[list[UploadFile] | None, File()] = None,
+    store_file: Annotated[UploadFile | None, File()] = None,
+) -> Response:
     """Process Costco analysis - delegates to app.routes.costco"""
     return process_costco_analysis(files, store_file)
 
 
-@app.post("/raccoon")
+@app.post("/raccoon", response_class=HTMLResponse)
 async def raccoon_post(
-    files: Optional[List[UploadFile]] = File(None),
-    ar_files: Optional[List[UploadFile]] = File(None),
-):
+    files: Annotated[list[UploadFile] | None, File()] = None,
+    ar_files: Annotated[list[UploadFile] | None, File()] = None,
+) -> HTMLResponse:
     return await process_raccoon_analysis(files or [], ar_files or [], template_raccoon)
 
 
-@app.post("/sales")
+@app.post(
+    "/sales",
+    response_class=Response,
+    responses=DOWNLOAD_RESPONSES,
+)
 def sales_post(
-    file: Optional[UploadFile] = File(None),
-):
+    file: Annotated[UploadFile | None, File()] = None,
+) -> Response:
     """Process Sales analysis and download the generated workbook."""
     response, _ = process_sales_analysis(file)
     return response

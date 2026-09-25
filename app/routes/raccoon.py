@@ -3,10 +3,8 @@ import base64
 from datetime import timedelta
 from io import BytesIO
 import re
-from typing import Annotated
-
 import pandas as pd
-from fastapi import File, UploadFile
+from fastapi import UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse
 from openpyxl.styles import PatternFill
@@ -20,7 +18,7 @@ from app.library.utils import to_camel_case
 
 
 MAX_FILES = 24
-MAX_FILE_SIZE = 25 * 1024 * 1024
+MAX_FILE_SIZE = 5 * 1024 * 1024
 EXCEL_SUFFIXES = (".xls", ".xlsx")
 AR_SHEETS = {
     "CHECK": {"date": 0, "customer": 1, "checkRef": 2, "depositRef": 4, "invoiceRef": 6, "amount": 7, "depositTotal": 8},
@@ -388,10 +386,10 @@ def _review_summary(results: list[MonthFrames], issues: Iterable[dict] = ()) -> 
 
 
 async def process_raccoon_analysis(
-    files: Annotated[list[UploadFile], File()],
-    ar_files: Annotated[list[UploadFile], File()],
+    files: list[UploadFile],
+    ar_files: list[UploadFile],
     template,
-):
+) -> HTMLResponse:
     if not files:
         return HTMLResponse(template.render(error="Choose at least one VNB/AP workbook."), status_code=400)
     if len(files) > MAX_FILES:
@@ -408,7 +406,10 @@ async def process_raccoon_analysis(
                 return HTMLResponse(template.render(error=f"{filename} is not an Excel workbook."), status_code=400)
             content = await file.read(MAX_FILE_SIZE + 1)
             if len(content) > MAX_FILE_SIZE:
-                return HTMLResponse(template.render(error=f"{filename} is larger than 25 MB."), status_code=400)
+                return HTMLResponse(
+                    template.render(error=f"{filename} is larger than 100 MB."),
+                    status_code=400,
+                )
             destination.append((filename, content))
 
     try:

@@ -1,26 +1,23 @@
-from fastapi.responses import StreamingResponse, HTMLResponse
+from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from openpyxl.utils.dataframe import dataframe_to_rows
 from io import BytesIO
 from openpyxl import Workbook
 from collections import defaultdict
-from typing import Optional, Dict, Tuple
 import pandas as pd
-from fastapi import File, UploadFile
+from fastapi import UploadFile
 
-MAX_FILE_SIZE = 25 * 1024 * 1024
+MAX_FILE_SIZE = 5 * 1024 * 1024
 EXCEL_SUFFIXES = (".xls", ".xlsx")
 
 
 def process_sales_analysis(
-    file: Optional[UploadFile] = File(None), return_validation: bool = False
-) -> Tuple[StreamingResponse, Dict[str, Dict[str, float]]]:
+    file: UploadFile | None = None,
+) -> tuple[Response, dict[str, dict[str, float | bool]]]:
     """
     Process sales analysis from uploaded Excel file.
 
     Args:
         file: Excel file containing sales data
-        return_validation: If True, return validation results along with the file
-
     Returns:
         Tuple of (StreamingResponse with Excel file, validation_results dict)
     """
@@ -38,7 +35,7 @@ def process_sales_analysis(
         content = file.file.read(MAX_FILE_SIZE + 1)
         if len(content) > MAX_FILE_SIZE:
             return HTMLResponse(
-                content="Sales file must be 25 MB or smaller.", status_code=400
+                content="Sales file must be 100 MB or smaller.", status_code=400
             ), {}
         df = pd.read_excel(BytesIO(content))
     except Exception:
@@ -47,15 +44,32 @@ def process_sales_analysis(
             status_code=400,
         ), {}
 
+    if len(df.columns) != 5:
+        return HTMLResponse(
+            content="Sales workbook must contain exactly five columns.",
+            status_code=400,
+        ), {}
+
     # Set column names
     df.columns = ["Customer", "Cost", "n/a", "cost-of-goods", "profit-percentage"]
-    df = df.dropna(how="all")
+    df = df.dropna(how="all").reset_index(drop=True)
+    if len(df) < 4:
+        return HTMLResponse(
+            content="Sales workbook does not contain enough summary rows.",
+            status_code=400,
+        ), {}
 
     # Extract expected totals from the last rows
     keys = ["period-to-date", "year-to-date", "prior-year"]
     expected = defaultdict(float)
-    for i, val in enumerate(df["Cost"].iloc[-4:-1].tolist()):
-        expected[keys[i]] = round(float(val), 3)
+    try:
+        for i, val in enumerate(df["Cost"].iloc[-4:-1].tolist()):
+            expected[keys[i]] = round(float(val), 3)
+    except (TypeError, ValueError):
+        return HTMLResponse(
+            content="Sales workbook summary values must be numbers.",
+            status_code=400,
+        ), {}
 
     # Parse salesperson data
     sales = defaultdict(lambda: defaultdict(float))
@@ -67,14 +81,37 @@ def process_sales_analysis(
             continue
         if isinstance(customer, str):
             if customer.lower().startswith("salesperson"):
-                salesperson = customer.split(" ")[1]
+                parts = customer.split(maxsplit=1)
+                if len(parts) != 2 or i + 3 >= len(df):
+                    return HTMLResponse(
+                        content="Each salesperson must have a name and three summary rows.",
+                        status_code=400,
+                    ), {}
+                salesperson = parts[1]
                 j = i + 3
                 temp = i + 1
                 while temp <= j:
-                    key = "-".join(df["Customer"][temp].lower().strip().split(" "))
-                    amount = df["Cost"][temp]
-                    sales[salesperson][key[:-1]] += float(amount)
+                    label = df.at[temp, "Customer"]
+                    try:
+                        key = "-".join(label.lower().strip().split()).rstrip(":")
+                        if key not in keys:
+                            raise ValueError
+                        sales[salesperson][key] += float(df.at[temp, "Cost"])
+                    except (AttributeError, TypeError, ValueError):
+                        return HTMLResponse(
+                            content=(
+                                f"{salesperson} must have period-to-date, year-to-date, "
+                                "and prior-year numeric rows."
+                            ),
+                            status_code=400,
+                        ), {}
                     temp += 1
+
+    if not sales:
+        return HTMLResponse(
+            content="Sales workbook does not contain any salesperson sections.",
+            status_code=400,
+        ), {}
 
     # Aggregate results and remove empty salespersons
     actual = defaultdict(float)
