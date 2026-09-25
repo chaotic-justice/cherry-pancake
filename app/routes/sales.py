@@ -7,8 +7,11 @@ from typing import Optional, Dict, Tuple
 import pandas as pd
 from fastapi import File, UploadFile
 
+MAX_FILE_SIZE = 25 * 1024 * 1024
+EXCEL_SUFFIXES = (".xls", ".xlsx")
 
-async def process_sales_analysis(
+
+def process_sales_analysis(
     file: Optional[UploadFile] = File(None), return_validation: bool = False
 ) -> Tuple[StreamingResponse, Dict[str, Dict[str, float]]]:
     """
@@ -26,12 +29,22 @@ async def process_sales_analysis(
             content="Please upload an Excel file first.", status_code=400
         ), {}
 
-    try:
-        content = await file.read()
-        df = pd.read_excel(BytesIO(content))
-    except Exception as e:
+    if not file.filename.lower().endswith(EXCEL_SUFFIXES):
         return HTMLResponse(
-            content=f"Error reading Excel file: {str(e)}", status_code=400
+            content="Sales file must be an Excel workbook.", status_code=400
+        ), {}
+
+    try:
+        content = file.file.read(MAX_FILE_SIZE + 1)
+        if len(content) > MAX_FILE_SIZE:
+            return HTMLResponse(
+                content="Sales file must be 25 MB or smaller.", status_code=400
+            ), {}
+        df = pd.read_excel(BytesIO(content))
+    except Exception:
+        return HTMLResponse(
+            content="Could not read the sales workbook. Check that it is a valid Excel export.",
+            status_code=400,
         ), {}
 
     # Set column names

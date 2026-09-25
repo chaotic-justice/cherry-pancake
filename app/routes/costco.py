@@ -14,8 +14,12 @@ from app.library.utils import (
     get_today_date,
 )
 
+MAX_FILES = 30
+MAX_FILE_SIZE = 25 * 1024 * 1024
+STORE_SUFFIXES = (".csv", ".xls", ".xlsx")
 
-async def process_costco_analysis(
+
+def process_costco_analysis(
     files: Optional[List[UploadFile]] = File(None),
     store_file: Optional[UploadFile] = File(None),
 ):
@@ -29,9 +33,13 @@ async def process_costco_analysis(
     Returns:
         StreamingResponse with Excel file or HTMLResponse with error
     """
-    if files and len(files) > 30:
+    if not files:
         return HTMLResponse(
-            content="Error: You can upload a maximum of 30 PDF files at once.",
+            content="Please upload at least one Costco PDF file.", status_code=400
+        )
+    if len(files) > MAX_FILES:
+        return HTMLResponse(
+            content=f"Choose no more than {MAX_FILES} Costco PDF files.",
             status_code=400,
         )
 
@@ -41,7 +49,16 @@ async def process_costco_analysis(
     # 1. Load Store Mapping
     if store_file and store_file.filename:
         try:
-            content = await store_file.read()
+            if not store_file.filename.lower().endswith(STORE_SUFFIXES):
+                return HTMLResponse(
+                    content="Store mapping file must be CSV or Excel.", status_code=400
+                )
+            content = store_file.file.read(MAX_FILE_SIZE + 1)
+            if len(content) > MAX_FILE_SIZE:
+                return HTMLResponse(
+                    content="Store mapping file must be 25 MB or smaller.",
+                    status_code=400,
+                )
             filename = store_file.filename.lower()
             if filename.endswith(".csv"):
                 df_stores = pd.read_csv(BytesIO(content), header=None)
@@ -53,9 +70,10 @@ async def process_costco_analysis(
                     status_code=400,
                 )
             store_mapping = get_store_names(df=df_stores)
-        except Exception as e:
+        except Exception:
             return HTMLResponse(
-                content=f"Error loading store mapping: {str(e)}", status_code=400
+                content="Could not read the store mapping file. Check that it is a valid CSV or Excel file.",
+                status_code=400,
             )
     else:
         return HTMLResponse(
@@ -66,10 +84,17 @@ async def process_costco_analysis(
     # 2. Process PDFs
     if files:
         for file in files:
-            if not file.filename.lower().endswith(".pdf"):
-                continue
+            if not file.filename or not file.filename.lower().endswith(".pdf"):
+                return HTMLResponse(
+                    content="Costco report files must be PDFs.", status_code=400
+                )
 
-            content = await file.read()
+            content = file.file.read(MAX_FILE_SIZE + 1)
+            if len(content) > MAX_FILE_SIZE:
+                return HTMLResponse(
+                    content=f"{file.filename} must be 25 MB or smaller.",
+                    status_code=400,
+                )
             try:
                 import pdfplumber
 
@@ -164,12 +189,17 @@ async def process_costco_analysis(
                     filename = file.filename
                 detailed_dataframes[filename] = (df, df2)
 
-            except Exception as e:
-                # Log or ignore error for specific file but keep going
-                print(f"Error processing {file.filename}: {e}")
-                import traceback
+            except Exception:
+                return HTMLResponse(
+                    content=f"Could not read {file.filename}. Check that it is a valid Costco PDF.",
+                    status_code=400,
+                )
 
-                traceback.print_exc()
+    if not detailed_dataframes:
+        return HTMLResponse(
+            content="No payment rows were found in the uploaded Costco PDFs.",
+            status_code=400,
+        )
 
     # 4. Generate Excel
     wb = Workbook()
@@ -184,7 +214,9 @@ async def process_costco_analysis(
         for row in dataframe_to_rows(df2, index=False, header=True):
             ws.append(row)
 
-        rdate, rcheck = filename.split()
+        parts = filename.split(maxsplit=1)
+        rdate = parts[0]
+        rcheck = parts[1] if len(parts) > 1 else "Unknown"
         ws.append([])
         total = df2["amount"].sum()
         ws.append(["Total", total])

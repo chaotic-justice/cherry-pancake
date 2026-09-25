@@ -6,6 +6,7 @@ import os
 from typing import List, Optional
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
 environment = jinja2.Environment(
@@ -18,6 +19,11 @@ template_raccoon = environment.get_template("raccoon.html")
 template_sales = environment.get_template("sales.html")
 
 app = FastAPI()
+app.mount(
+    "/static",
+    StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")),
+    name="static",
+)
 
 
 @app.get("/")
@@ -44,12 +50,12 @@ async def raccoon_get():
 
 
 @app.post("/costco")
-async def costco_post(
+def costco_post(
     files: Optional[List[UploadFile]] = File(None),
     store_file: Optional[UploadFile] = File(None),
 ):
     """Process Costco analysis - delegates to app.routes.costco"""
-    return await process_costco_analysis(files, store_file)
+    return process_costco_analysis(files, store_file)
 
 
 @app.post("/raccoon")
@@ -61,11 +67,11 @@ async def raccoon_post(
 
 
 @app.post("/sales")
-async def sales_post(
+def sales_post(
     file: Optional[UploadFile] = File(None),
 ):
     """Process Sales analysis and download the generated workbook."""
-    response, _ = await process_sales_analysis(file)
+    response, _ = process_sales_analysis(file)
     return response
 
 
