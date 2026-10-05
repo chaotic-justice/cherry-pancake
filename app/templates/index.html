@@ -1,47 +1,65 @@
 {% extends "base.html" %}
-{% block title %}Toolbox | Multi-Service Hub{% endblock %}
-{% block styles %}<link rel="stylesheet" href="/static/index.css">{% endblock %}
+
+{% block title %}Service Toolbox{% endblock %}
+
+{% block styles %}<link rel="stylesheet" href="/static/index.css?v=20261005-3">{% endblock %}
+
 {% block content %}
-<div class="container">
-    <header>
-        <h1>Service Toolbox</h1>
-        <p class="subtitle">Select a specialized analysis tool to begin</p>
+<main class="app-shell home-page">
+    <header class="home-header">
+        <div class="toolbox-mark" aria-hidden="true">CP</div>
+        <div>
+            <h1 class="page-title">Service Toolbox</h1>
+            <p class="page-intro">Turn recurring accounting exports into finished Excel workbooks. Choose the job you need today.</p>
+        </div>
     </header>
 
-    <div class="services-grid">
-        <a href="/costco" class="service-card">
-            <div class="icon-box">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            </div>
-            <h2>Costco Analyzer</h2>
-            <p class="desc">Extract and aggregate payment reports with automated store mapping and Excel export.</p>
-            <div class="action-link">
-                Launch Tool
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </div>
+    <nav class="tool-list" aria-label="Accounting tools">
+        <a href="/costco" class="tool-row">
+            <span class="tool-icon" aria-hidden="true">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+            </span>
+            <span class="tool-copy">
+                <strong>Costco payment reports</strong>
+                <span>Combine payment PDFs, map stores, and download one organized workbook.</span>
+            </span>
+            <span class="tool-format">PDF → Excel</span>
+            <span class="tool-arrow" aria-hidden="true">→</span>
         </a>
 
-        <a href="/sales" class="service-card secondary">
-            <div class="icon-box">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </div>
-            <h2>Salesperson Performance</h2>
-            <p class="desc">Analyze individual sales metrics, productivity trends, and regional performance data.</p>
-            <div class="action-link">
-                Launch Tool
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </div>
+        <a href="/sales" class="tool-row">
+            <span class="tool-icon" aria-hidden="true">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </span>
+            <span class="tool-copy">
+                <strong>Salesperson performance</strong>
+                <span>Validate sales totals and turn the export into a clean performance report.</span>
+            </span>
+            <span class="tool-format">Excel → Excel</span>
+            <span class="tool-arrow" aria-hidden="true">→</span>
         </a>
 
-        <a href="/raccoon" class="service-card">
-            <div class="icon-box" aria-hidden="true" style="font-size: 2rem;">🦝</div>
-            <h2>Raccoon Reconciliation</h2>
-            <p class="desc">Drop monthly VNB/AP workbooks and download the reconciled results. No filename setup required.</p>
-            <div class="action-link">
-                Launch Tool
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </div>
+        <a href="/raccoon" class="tool-row">
+            <span class="tool-icon tool-icon-raccoon" aria-hidden="true">🦝</span>
+            <span class="tool-copy">
+                <strong>Raccoon reconciliation</strong>
+                <span>Match monthly VNB/AP and receivables, review exceptions, and download results.</span>
+            </span>
+            <span class="tool-format">Excel → Review</span>
+            <span class="tool-arrow" aria-hidden="true">→</span>
         </a>
-    </div>
-</div>
+    </nav>
+
+    <p class="home-note">Files are processed only when you choose a tool and submit them.</p>
+</main>
 {% endblock %}

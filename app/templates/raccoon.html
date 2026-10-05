@@ -2,14 +2,16 @@
 {% block title %}Raccoon | Reconcile transactions{% endblock %}
 {% block styles %}<link rel="stylesheet" href="/static/raccoon.css">{% endblock %}
 {% block content %}
-<main>
-    <a class="back" href="/">← Service Toolbox</a>
-    <h1>Raccoon reconciliation</h1>
-    <p class="intro">Choose the monthly VNB/AP workbooks and the matching accounts-receivable workbooks. Raccoon sorts months from the transaction dates, matches conservatively, and keeps uncertain credits ready for review.</p>
+<main class="app-shell raccoon-page">
+    <a class="back-link" href="/">← Service Toolbox</a>
+    <header class="page-header">
+        <h1 class="page-title">Raccoon reconciliation</h1>
+        <p class="page-intro">Match monthly VNB/AP workbooks with accounts receivable, review uncertain credits, and download a workbook for each month.</p>
+    </header>
 
     {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 
-    <form action="/raccoon" method="post" enctype="multipart/form-data">
+<form id="raccoon-form" class="raccoon-form" action="/raccoon" method="post" enctype="multipart/form-data">
         <div class="uploads">
             <label class="drop-zone" id="recon-zone">
                 <input id="files" name="files" type="file" accept=".xls,.xlsx" multiple required>
@@ -26,8 +28,9 @@
                 <ul class="file-list" id="ar-list" aria-live="polite"></ul>
             </label>
         </div>
-        <button id="submit" type="submit">Reconcile and review</button>
+        <button id="submit" class="primary-action" type="submit">Reconcile and review</button>
     </form>
+    <p id="request-status" class="request-status" role="status" aria-live="polite"></p>
 
     {% if results %}
     <section class="results" aria-labelledby="results-heading">

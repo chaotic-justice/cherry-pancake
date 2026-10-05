@@ -1,3 +1,30 @@
+:root {
+    color-scheme: dark;
+    --background: #0d1422;
+    --surface: #141e30;
+    --surface-raised: #19253a;
+    --surface-hover: #202e46;
+    --border: #35445d;
+    --border-strong: #596a84;
+    --text: #f7f9fc;
+    --muted: #b9c5d8;
+    --accent: #a9b7ff;
+    --accent-strong: #6679e8;
+    --accent-hover: #7588f2;
+    --success: #87dda7;
+    --warning: #f1cb78;
+    --danger: #ff9aa6;
+    --review: #efa8d1;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --space-xs: .5rem;
+    --space-sm: .75rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
+}
+
 *,
 *::before,
 *::after {
@@ -5,25 +32,265 @@
 }
 
 html {
-    color-scheme: dark;
+    min-width: 320px;
+    background: var(--background);
 }
 
 body {
+    min-height: 100vh;
     margin: 0;
+    background: var(--background);
+    color: var(--text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
 }
 
-a,
 button,
 input {
     font: inherit;
 }
 
+a {
+    color: inherit;
+}
+
+svg {
+    display: block;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.app-shell {
+    width: min(100% - 2rem, 1040px);
+    margin-inline: auto;
+    padding-block: var(--space-xl) var(--space-2xl);
+}
+
+.tool-page {
+    width: min(100% - 2rem, 820px);
+}
+
+.back-link {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-xl);
+    color: var(--accent);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+    text-underline-offset: .2em;
+}
+
+.page-header {
+    margin-bottom: var(--space-xl);
+}
+
+.page-title {
+    max-width: 18ch;
+    margin: 0;
+    font-size: 2.25rem;
+    line-height: 1.1;
+    letter-spacing: -.025em;
+    text-wrap: balance;
+}
+
+.page-intro {
+    max-width: 68ch;
+    margin: var(--space-md) 0 0;
+    color: var(--muted);
+    font-size: 1.0625rem;
+    text-wrap: pretty;
+}
+
+.workflow {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+}
+
+.workflow-section {
+    padding: var(--space-lg);
+}
+
+.workflow-section + .workflow-section,
+.workflow-actions {
+    border-top: 1px solid var(--border);
+}
+
+.workflow-section h2 {
+    margin: 0;
+    font-size: 1.125rem;
+    line-height: 1.35;
+    text-wrap: balance;
+}
+
+.field-help {
+    max-width: 68ch;
+    margin: var(--space-xs) 0 var(--space-md);
+    color: var(--muted);
+}
+
+.file-picker {
+    position: relative;
+    display: flex;
+    min-height: 88px;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+    cursor: pointer;
+    transition: border-color 180ms ease, background-color 180ms ease;
+}
+
+.file-picker:hover,
+.file-picker:focus-within {
+    border-color: var(--accent);
+    background: var(--surface-hover);
+}
+
+.file-picker.active {
+    border-style: solid;
+    border-color: var(--success);
+}
+
+.file-picker input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.file-picker-icon {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: var(--radius-sm);
+    background: #27365a;
+    color: var(--accent);
+}
+
+.file-picker-copy {
+    display: grid;
+    gap: .2rem;
+}
+
+.file-picker-label {
+    color: var(--text);
+    font-weight: 750;
+    overflow-wrap: anywhere;
+}
+
+.file-picker-hint {
+    color: var(--muted);
+    font-size: .875rem;
+}
+
+.workflow-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    justify-content: space-between;
+    padding: var(--space-md) var(--space-lg);
+    background: #111a2a;
+}
+
+.primary-action,
+.download {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    border: 0;
+    border-radius: var(--radius-sm);
+    padding: .75rem 1rem;
+    background: var(--accent-strong);
+    color: white;
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.primary-action:hover:not(:disabled),
+.download:hover {
+    background: var(--accent-hover);
+}
+
+.primary-action:active:not(:disabled),
+.download:active {
+    transform: translateY(1px);
+}
+
+.primary-action:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+.action-note {
+    margin: 0;
+    color: var(--muted);
+    font-size: .875rem;
+}
+
+.error {
+    margin: 0 0 var(--space-lg);
+    padding: var(--space-md);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-sm);
+    background: #341b29;
+    color: #ffd8dd;
+}
+
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
-summary:focus-visible {
-    outline: 3px solid currentColor;
+summary:focus-visible,
+.file-picker:focus-within {
+    outline: 3px solid var(--accent);
     outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+    .app-shell,
+    .tool-page {
+        width: min(100% - 1.25rem, 1040px);
+        padding-block: var(--space-md) var(--space-xl);
+    }
+
+    .page-title {
+        font-size: 1.875rem;
+    }
+
+    .workflow-section {
+        padding: var(--space-md);
+    }
+
+    .workflow-actions {
+        align-items: stretch;
+        flex-direction: column;
+        padding: var(--space-md);
+    }
+
+    .primary-action {
+        width: 100%;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {

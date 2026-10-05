@@ -110,6 +110,33 @@ class EndpointTest(unittest.TestCase):
         self.assertIn('/static/index.css', response.text)
         self.assertEqual(self.client.get("/static/base.css").status_code, 200)
 
+    def test_home_page_renders_all_tool_rows(self):
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.text.count('class="tool-row"'), 3)
+        self.assertIn('<a href="/costco" class="tool-row">', response.text)
+        self.assertIn('<a href="/sales" class="tool-row">', response.text)
+        self.assertIn('<a href="/raccoon" class="tool-row">', response.text)
+
+    def test_sales_page_renders_the_upload_workflow(self):
+        response = self.client.get("/sales")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('<form class="workflow" action="/sales"', response.text)
+        self.assertIn('<span class="file-picker-copy">', response.text)
+        self.assertIn('id="analyze-btn" disabled', response.text)
+
+    def test_raccoon_progressively_enhances_form_submission(self):
+        page = self.client.get("/raccoon")
+        script = self.client.get("/static/raccoon.js")
+
+        self.assertIn('id="raccoon-form"', page.text)
+        self.assertIn('id="request-status"', page.text)
+        self.assertIn("event.preventDefault()", script.text)
+        self.assertIn("new FormData(form)", script.text)
+        self.assertIn('querySelector("main").replaceWith(nextMain)', script.text)
+
     def test_costco_page_explains_optional_store_update(self):
         response = self.client.get("/costco")
 

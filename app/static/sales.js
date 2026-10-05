@@ -9,7 +9,7 @@ const fileInput = document.getElementById('file-input');
             fileWrapper.classList.add('active');
             analyzeBtn.disabled = false;
         } else {
-            fileLabel.textContent = 'Select Excel file (.xlsx)';
+            fileLabel.textContent = 'Choose the sales workbook';
             fileWrapper.classList.remove('active');
             analyzeBtn.disabled = true;
         }

@@ -1,63 +1,73 @@
 {% extends "base.html" %}
-{% block title %}Salesperson Performance | Analysis{% endblock %}
+
+{% block title %}Salesperson Performance | Service Toolbox{% endblock %}
+
 {% block styles %}<link rel="stylesheet" href="/static/sales.css">{% endblock %}
+
 {% block content %}
-<div class="container">
-    <div class="card">
-        <header>
-            <h1>Salesperson Performance</h1>
-            <p class="subtitle">Upload sales data for analysis</p>
-        </header>
+<main class="app-shell tool-page">
+    <a class="back-link" href="/">← Service Toolbox</a>
 
-        <div class="feature-box">
-            <form action="/sales" method="post" enctype="multipart/form-data" id="sales-form">
-                <div class="file-input-wrapper" id="file-wrapper">
-                    <div class="custom-file-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        <span id="file-label">Select Excel file (.xlsx)</span>
-                    </div>
-                    <input type="file" name="file" id="file-input" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required onchange="handleFileChange(this)">
-                </div>
+    <header class="page-header">
+        <h1 class="page-title">Salesperson performance</h1>
+        <p class="page-intro">Validate the totals in a salesperson export and download a clean Excel report.</p>
+    </header>
 
-                <button type="submit" class="submit-btn" id="analyze-btn" disabled>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Analyze & Download Excel
-                </button>
-            </form>
+    <form class="workflow" action="/sales" method="post" enctype="multipart/form-data" id="sales-form">
+        <section class="workflow-section" aria-labelledby="sales-file-heading">
+            <h2 id="sales-file-heading">Sales workbook</h2>
+            <p class="field-help">Choose the original .xlsx sales export. The workbook must include the expected summary rows.</p>
+
+            <label class="file-picker" id="file-wrapper">
+                <input
+                    type="file"
+                    name="file"
+                    id="file-input"
+                    accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    required
+                    onchange="handleFileChange(this)"
+                >
+                <span class="file-picker-icon" aria-hidden="true">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                </span>
+                <span class="file-picker-copy">
+                    <span class="file-picker-label" id="file-label">Choose the sales workbook</span>
+                    <span class="file-picker-hint">Excel .xlsx</span>
+                </span>
+            </label>
+        </section>
+
+        <div class="workflow-actions">
+            <p class="action-note">The download starts when analysis finishes.</p>
+            <button type="submit" class="primary-action" id="analyze-btn" disabled>
+                Analyze and download Excel
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 3v12"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <path d="M5 21h14"/>
+                </svg>
+            </button>
         </div>
+    </form>
 
-        {% if validation %}
-        <div class="validation-section">
-            <h2>Validation Results</h2>
-            {% for key, result in validation.items() %}
-            <div class="validation-item {{ 'matched' if result.matched else 'unmatched' }}">
-                <div class="validation-label">{{ key.replace('-', ' ').title() }}</div>
-                <div class="validation-values">
-                    <div class="validation-value">
-                        <span class="validation-value-label">Expected</span>
-                        <span class="validation-value-number">{{ "{:,.2f}".format(result.expected) }}</span>
-                    </div>
-                    <div class="validation-value">
-                        <span class="validation-value-label">Actual</span>
-                        <span class="validation-value-number">{{ "{:,.2f}".format(result.actual) }}</span>
-                    </div>
-                    <div class="match-indicator {{ 'matched' if result.matched else 'unmatched' }}">
-                        {{ '✓' if result.matched else '✗' }}
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-
+    {% if validation %}
+    <section class="validation-section" aria-labelledby="validation-heading">
+        <h2 id="validation-heading">Validation results</h2>
+        {% for key, result in validation.items() %}
+        <div class="validation-item {{ 'matched' if result.matched else 'unmatched' }}">
+            <strong>{{ key.replace('-', ' ').title() }}</strong>
+            <span>Expected {{ "{:,.2f}".format(result.expected) }}</span>
+            <span>Actual {{ "{:,.2f}".format(result.actual) }}</span>
+            <span class="match-indicator">{{ 'Matched' if result.matched else 'Check total' }}</span>
         </div>
-        {% endif %}
+        {% endfor %}
+    </section>
+    {% endif %}
+</main>
+{% endblock %}
 
-        <a href="/" class="back-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-            Back to Toolbox
-        </a>
-    </div>
-</div>
-{% endblock %}
-{% block scripts %}
-<script src="/static/sales.js" defer></script>
-{% endblock %}
+{% block scripts %}<script src="/static/sales.js" defer></script>{% endblock %}

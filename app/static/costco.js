@@ -42,7 +42,7 @@ function updateSelectionLabel(input, label, wrapper) {
     const error = selectionError(input);
     if (error) {
         label.textContent = error;
-        label.style.color = '#ef4444';
+        label.style.color = 'var(--danger)';
         wrapper.classList.remove('active');
         return;
     }
@@ -57,8 +57,8 @@ function updateSelectionLabel(input, label, wrapper) {
     }
 
     label.textContent = input === storeInput
-        ? 'Upload an updated store list (optional)'
-        : `Select PDF files (max ${maxReportFiles}, ${maxFileSizeMb} MB each)`;
+        ? 'Choose an updated store list'
+        : 'Choose Costco payment PDFs';
     label.style.color = '';
     wrapper.classList.remove('active');
 }
