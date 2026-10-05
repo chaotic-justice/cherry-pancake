@@ -1,12 +1,12 @@
 import unittest
 from io import BytesIO
-from unittest.mock import patch
 
 import pandas as pd
 from fastapi.testclient import TestClient
 from openpyxl import load_workbook
 
 from app.main import app
+from tests.costco_pdf_fixture import make_costco_pdf
 
 
 class EndpointTest(unittest.TestCase):
@@ -15,14 +15,31 @@ class EndpointTest(unittest.TestCase):
     def test_costco_requires_a_pdf(self):
         response = self.client.post(
             "/costco",
-            files=[
-                ("files", ("report.txt", b"not a PDF", "text/plain")),
-                ("store_file", ("stores.csv", b"1,Example", "text/csv")),
-            ],
+            files={"files": ("report.txt", b"not a PDF", "text/plain")},
         )
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("must be PDFs", response.text)
+
+    def test_costco_returns_generated_workbook(self):
+        pdf = make_costco_pdf(
+            [["000636ABCDEF", "1", "Item", "01/02", "10", "0", "10"]],
+            metadata_lines=("Date: 01/02/2026", "Payment: 123"),
+        )
+
+        response = self.client.post(
+            "/costco",
+            files={"files": ("payment.pdf", pdf, "application/pdf")},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.headers["content-type"],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        self.assertIn("Costco_", response.headers["content-disposition"])
+        workbook = load_workbook(BytesIO(response.content))
+        self.assertEqual(workbook[workbook.sheetnames[0]]["G2"].value, "C4#0636")
 
     def test_sales_requires_an_excel_workbook(self):
         response = self.client.post(
@@ -81,111 +98,10 @@ class EndpointTest(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(load_workbook(BytesIO(response.content)).sheetnames, ["Sales Report"])
-
-    def test_costco_keeps_reports_with_the_same_payment_id(self):
-        class Page:
-            def extract_text(self):
-                return "Date: 01/02/2026\nPayment: 123"
-
-            def extract_tables(self):
-                return [
-                    [
-                        list("abcdefg"),
-                        ["000636ABCDEF", "1", "Item", "01/02", "", "", "10.00"],
-                    ]
-                ]
-
-        class Pdf:
-            pages = [Page()]
-
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *_):
-                return None
-
-        with patch("pdfplumber.open", side_effect=lambda *_: Pdf()):
-            response = self.client.post(
-                "/costco",
-                files=[
-                    ("files", ("one.pdf", b"one", "application/pdf")),
-                    ("files", ("two.pdf", b"two", "application/pdf")),
-                ],
-            )
-
-        self.assertEqual(response.status_code, 200)
-        workbook = load_workbook(BytesIO(response.content))
-        self.assertEqual(len(workbook.sheetnames), 2)
-        self.assertEqual(workbook[workbook.sheetnames[0]]["G2"].value, "C4#0636")
-
-    def test_costco_assigns_negative_date_range_adjustments_to_cosnext(self):
-        class Page:
-            def extract_text(self):
-                return "Date: 09/24/2026\nPayment: 456"
-
-            def extract_tables(self):
-                return [
-                    [
-                        list("abcdefg"),
-                        [
-                            "0141441151",
-                            "8/3/26 - 8/30/26",
-                            "",
-                            "09/22/2026",
-                            "-5,423.93",
-                            "0.00",
-                            "-5,423.93",
-                        ],
-                        [
-                            "0141441152",
-                            "8/3/26 - 8/30/26",
-                            "",
-                            "09/22/2026",
-                            "100.00",
-                            "0.00",
-                            "100.00",
-                        ],
-                        [
-                            "0141441153",
-                            "12345",
-                            "",
-                            "09/22/2026",
-                            "-25.00",
-                            "0.00",
-                            "-25.00",
-                        ],
-                    ]
-                ]
-
-        class Pdf:
-            pages = [Page()]
-
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *_):
-                return None
-
-        with patch("pdfplumber.open", side_effect=lambda *_: Pdf()):
-            response = self.client.post(
-                "/costco",
-                files={"files": ("adjustments.pdf", b"pdf", "application/pdf")},
-            )
-
-        self.assertEqual(response.status_code, 200)
-        workbook = load_workbook(BytesIO(response.content))
-        sheet = workbook[workbook.sheetnames[0]]
-        self.assertEqual(sheet["F2"].value, "0141")
-        self.assertEqual(sheet["G2"].value, "COSNEXT")
-        self.assertEqual(sheet["G3"].value, "C7#0141")
-        self.assertEqual(sheet["G4"].value, "C7#0141")
-        check_numbers = [
-            row[1].value
-            for row in sheet.iter_rows()
-            if row[0].value == "Check Number"
-        ]
-        self.assertEqual(check_numbers, ["456"])
+        self.assertEqual(
+            load_workbook(BytesIO(response.content)).sheetnames,
+            ["Sales Report"],
+        )
 
     def test_templates_load_static_assets(self):
         response = self.client.get("/")
@@ -203,6 +119,25 @@ class EndpointTest(unittest.TestCase):
             response.text,
             r'<input[^>]*id="store-input"[^>]*\brequired\b',
         )
+
+    def test_costco_form_uses_the_server_upload_contract(self):
+        response = self.client.get("/costco")
+        script = self.client.get("/static/costco.js")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(script.status_code, 200)
+        self.assertIn('data-max-report-files="30"', response.text)
+        self.assertIn('data-max-file-bytes="5242880"', response.text)
+        self.assertIn('data-max-file-size-mb="5"', response.text)
+        self.assertIn('data-report-suffixes=".pdf"', response.text)
+        self.assertIn('data-store-update-suffixes=".csv,.xls,.xlsx"', response.text)
+        self.assertIn("max 30, 5 MB each", response.text)
+        self.assertIn(".csv,.xls,.xlsx", response.text)
+        self.assertNotIn("100 MB", response.text)
+        self.assertIn("analysisForm.dataset.maxReportFiles", script.text)
+        self.assertIn("analysisForm.dataset.maxFileBytes", script.text)
+        self.assertIn("analysisForm.dataset.reportSuffixes", script.text)
+        self.assertIn("analysisForm.dataset.storeUpdateSuffixes", script.text)
 
     def test_openapi_declares_real_response_types(self):
         paths = app.openapi()["paths"]

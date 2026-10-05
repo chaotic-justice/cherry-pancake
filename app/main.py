@@ -1,6 +1,7 @@
 from app.routes.costco import process_costco_analysis
 from app.routes.raccoon import process_raccoon_analysis
 from app.routes.sales import process_sales_analysis
+from app.library.costco_upload_policy import COSTCO_UPLOAD_POLICY
 import jinja2
 import os
 from typing import Annotated
@@ -39,7 +40,7 @@ def root() -> HTMLResponse:
 
 @app.get("/costco", response_class=HTMLResponse)
 def costco_get() -> HTMLResponse:
-    html = template_costco.render()
+    html = template_costco.render(upload_policy=COSTCO_UPLOAD_POLICY)
     return HTMLResponse(content=html)
 
 
