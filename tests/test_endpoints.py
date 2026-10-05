@@ -89,7 +89,12 @@ class EndpointTest(unittest.TestCase):
                 return "Date: 01/02/2026\nPayment: 123"
 
             def extract_tables(self):
-                return [[list("abcdefg"), ["000001ABCDEF", "1", "Item", "01/02", "", "", "10.00"]]]
+                return [
+                    [
+                        list("abcdefg"),
+                        ["000636ABCDEF", "1", "Item", "01/02", "", "", "10.00"],
+                    ]
+                ]
 
         class Pdf:
             pages = [Page()]
@@ -106,12 +111,81 @@ class EndpointTest(unittest.TestCase):
                 files=[
                     ("files", ("one.pdf", b"one", "application/pdf")),
                     ("files", ("two.pdf", b"two", "application/pdf")),
-                    ("store_file", ("stores.csv", b"1,Example", "text/csv")),
                 ],
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(load_workbook(BytesIO(response.content)).sheetnames), 2)
+        workbook = load_workbook(BytesIO(response.content))
+        self.assertEqual(len(workbook.sheetnames), 2)
+        self.assertEqual(workbook[workbook.sheetnames[0]]["G2"].value, "C4#0636")
+
+    def test_costco_assigns_negative_date_range_adjustments_to_cosnext(self):
+        class Page:
+            def extract_text(self):
+                return "Date: 09/24/2026\nPayment: 456"
+
+            def extract_tables(self):
+                return [
+                    [
+                        list("abcdefg"),
+                        [
+                            "0141441151",
+                            "8/3/26 - 8/30/26",
+                            "",
+                            "09/22/2026",
+                            "-5,423.93",
+                            "0.00",
+                            "-5,423.93",
+                        ],
+                        [
+                            "0141441152",
+                            "8/3/26 - 8/30/26",
+                            "",
+                            "09/22/2026",
+                            "100.00",
+                            "0.00",
+                            "100.00",
+                        ],
+                        [
+                            "0141441153",
+                            "12345",
+                            "",
+                            "09/22/2026",
+                            "-25.00",
+                            "0.00",
+                            "-25.00",
+                        ],
+                    ]
+                ]
+
+        class Pdf:
+            pages = [Page()]
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_):
+                return None
+
+        with patch("pdfplumber.open", side_effect=lambda *_: Pdf()):
+            response = self.client.post(
+                "/costco",
+                files={"files": ("adjustments.pdf", b"pdf", "application/pdf")},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        workbook = load_workbook(BytesIO(response.content))
+        sheet = workbook[workbook.sheetnames[0]]
+        self.assertEqual(sheet["F2"].value, "0141")
+        self.assertEqual(sheet["G2"].value, "COSNEXT")
+        self.assertEqual(sheet["G3"].value, "C7#0141")
+        self.assertEqual(sheet["G4"].value, "C7#0141")
+        check_numbers = [
+            row[1].value
+            for row in sheet.iter_rows()
+            if row[0].value == "Check Number"
+        ]
+        self.assertEqual(check_numbers, ["456"])
 
     def test_templates_load_static_assets(self):
         response = self.client.get("/")
@@ -119,6 +193,16 @@ class EndpointTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('/static/index.css', response.text)
         self.assertEqual(self.client.get("/static/base.css").status_code, 200)
+
+    def test_costco_page_explains_optional_store_update(self):
+        response = self.client.get("/costco")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("built-in Costco store list", response.text)
+        self.assertNotRegex(
+            response.text,
+            r'<input[^>]*id="store-input"[^>]*\brequired\b',
+        )
 
     def test_openapi_declares_real_response_types(self):
         paths = app.openapi()["paths"]

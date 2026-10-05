@@ -16,6 +16,10 @@ from app.library.utils import (
 MAX_FILES = 30
 MAX_FILE_SIZE = 5 * 1024 * 1024
 STORE_SUFFIXES = (".csv", ".xls", ".xlsx")
+DATE_RANGE_ORDER_PATTERN = (
+    r"\s*\d{1,2}/\d{1,2}/\d{2,4}\s*[-–—]\s*"
+    r"\d{1,2}/\d{1,2}/\d{2,4}\s*"
+)
 
 
 def process_costco_analysis(
@@ -27,7 +31,7 @@ def process_costco_analysis(
 
     Args:
         files: List of PDF files to process (max 30)
-        store_file: CSV or XLSX file containing store mapping data
+        store_file: Optional CSV or XLSX file containing updated store mapping data
 
     Returns:
         StreamingResponse with Excel file or HTMLResponse with error
@@ -42,7 +46,7 @@ def process_costco_analysis(
             status_code=400,
         )
 
-    store_mapping = {}
+    store_mapping = get_store_names()
     detailed_dataframes = []
 
     # 1. Load Store Mapping
@@ -77,12 +81,6 @@ def process_costco_analysis(
                 ),
                 status_code=400,
             )
-    else:
-        return HTMLResponse(
-            content="Please upload a store mapping CSV or XLSX file first.",
-            status_code=400,
-        )
-
     # 2. Process PDFs
     if files:
         for file in files:
@@ -189,6 +187,12 @@ def process_costco_analysis(
                         df.at[idx, "storeKey"] = skey
                         df.at[idx, "storeName"] = sval
 
+                # Negative adjustments spanning a date range belong to COSNEXT.
+                cosnext_mask = df["amount"].lt(0) & df["orderNumber"].str.fullmatch(
+                    DATE_RANGE_ORDER_PATTERN, na=False
+                )
+                df.loc[cosnext_mask, "storeName"] = "COSNEXT"
+
                 df2 = df[["storeName", "amount"]].copy()
                 df2 = df2.groupby("storeName", as_index=False).sum()
 
@@ -224,7 +228,7 @@ def process_costco_analysis(
 
         parts = filename.split(maxsplit=1)
         rdate = parts[0]
-        rcheck = parts[1] if len(parts) > 1 else "Unknown"
+        rcheck = parts[1].removeprefix("#") if len(parts) > 1 else "Unknown"
         ws.append([])
         total = df2["amount"].sum()
         ws.append(["Total", total])

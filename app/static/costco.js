@@ -1,5 +1,4 @@
-const storeInput = document.getElementById('store-input');
-    const pdfInput = document.getElementById('pdf-input');
+const pdfInput = document.getElementById('pdf-input');
     const downloadBtn = document.getElementById('download-btn');
 
     function handleFileChange(input, labelId, wrapperId) {
@@ -17,14 +16,13 @@ const storeInput = document.getElementById('store-input');
                 wrapper.classList.add('active');
             }
         } else {
-            label.textContent = input.id === 'store-input' ? 'Select .csv or .xlsx' : 'Select PDF files (max 30)';
+            label.textContent = input.id === 'store-input' ? 'Upload an updated store list (optional)' : 'Select PDF files (max 30)';
             label.style.color = '';
             wrapper.classList.remove('active');
         }
 
-        const hasStore = storeInput.files && storeInput.files.length > 0;
         const pdfCount = pdfInput.files ? pdfInput.files.length : 0;
         const validPdfCount = pdfCount > 0 && pdfCount <= 30;
 
-        downloadBtn.disabled = !hasStore || !validPdfCount;
+        downloadBtn.disabled = !validPdfCount;
     }
