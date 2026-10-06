@@ -114,8 +114,9 @@ class EndpointTest(unittest.TestCase):
         response = self.client.get("/")
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.text.count('class="tool-row"'), 3)
+        self.assertEqual(response.text.count('class="tool-row"'), 4)
         self.assertIn('<a href="/costco" class="tool-row">', response.text)
+        self.assertIn('<a href="/costco-payroll" class="tool-row">', response.text)
         self.assertIn('<a href="/sales" class="tool-row">', response.text)
         self.assertIn('<a href="/raccoon" class="tool-row">', response.text)
 
@@ -165,6 +166,36 @@ class EndpointTest(unittest.TestCase):
         self.assertIn("analysisForm.dataset.maxFileBytes", script.text)
         self.assertIn("analysisForm.dataset.reportSuffixes", script.text)
         self.assertIn("analysisForm.dataset.storeUpdateSuffixes", script.text)
+
+    def test_costco_payroll_page_and_download_contract(self):
+        page = self.client.get("/costco-payroll")
+        payroll = BytesIO()
+        with pd.ExcelWriter(payroll, engine="openpyxl") as writer:
+            pd.DataFrame(
+                [[1, 2, "Albany", "NY", "10.01.26", "10.10.26", "Jane"]],
+                columns=["Show #", "Whs. #", "Location", "State", "Start Date", "End Date", "Sales Person"],
+            ).to_excel(writer, index=False, startrow=2)
+            writer.sheets["Sheet1"]["A2"] = "Costco Payroll"
+
+        response = self.client.post(
+            "/costco-payroll",
+            files={
+                "files": (
+                    "10.04.26.xlsx",
+                    payroll.getvalue(),
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+            },
+        )
+
+        self.assertEqual(page.status_code, 200)
+        self.assertIn('multiple', page.text)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Costco_Payroll_Master_2026-10-04.xlsx", response.headers["content-disposition"])
+        self.assertEqual(
+            load_workbook(BytesIO(response.content)).sheetnames,
+            ["Payroll Master", "Needs Review", "Source Rows"],
+        )
 
     def test_openapi_declares_real_response_types(self):
         paths = app.openapi()["paths"]

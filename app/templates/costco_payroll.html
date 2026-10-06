@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Costco Payroll Master | Service Toolbox{% endblock %}
+
+{% block styles %}<link rel="stylesheet" href="/static/costco.css">{% endblock %}
+
+{% block content %}
+<main class="app-shell tool-page">
+    <a class="back-link" href="/">← Service Toolbox</a>
+
+    <header class="page-header">
+        <h1 class="page-title">Costco payroll master</h1>
+        <p class="page-intro">Combine dated Costco payroll workbooks and keep the latest final entry for each show.</p>
+    </header>
+
+    <form
+        class="workflow"
+        action="/costco-payroll"
+        method="post"
+        enctype="multipart/form-data"
+        id="payroll-form"
+        data-max-files="30"
+        data-max-file-bytes="5242880"
+    >
+        <section class="workflow-section" aria-labelledby="payroll-files-heading">
+            <h2 id="payroll-files-heading">Payroll workbooks</h2>
+            <p class="field-help">Choose up to 30 dated .xlsx files after unzipping the Google Drive download. Each file must be 5 MB or smaller.</p>
+
+            <label class="file-picker" id="file-wrapper">
+                <input
+                    type="file"
+                    name="files"
+                    id="file-input"
+                    accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    multiple
+                    required
+                    onchange="handleFileChange(this)"
+                >
+                <span class="file-picker-icon" aria-hidden="true">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                </span>
+                <span class="file-picker-copy">
+                    <span class="file-picker-label" id="file-label">Choose Costco payroll workbooks</span>
+                    <span class="file-picker-hint">Excel .xlsx · select several files at once</span>
+                </span>
+            </label>
+        </section>
+
+        <div class="workflow-actions">
+            <p class="action-note">Review the Needs Review sheet before using the payroll master.</p>
+            <button type="submit" class="primary-action" id="build-btn" disabled>
+                Build and download master
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 3v12"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <path d="M5 21h14"/>
+                </svg>
+            </button>
+        </div>
+    </form>
+</main>
+{% endblock %}
+
+{% block scripts %}<script src="/static/costco_payroll.js" defer></script>{% endblock %}

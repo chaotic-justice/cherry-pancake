@@ -1,4 +1,5 @@
 from app.routes.costco import process_costco_analysis
+from app.routes.costco_payroll import process_costco_payroll
 from app.routes.raccoon import process_raccoon_analysis
 from app.routes.sales import process_sales_analysis
 from app.library.costco_upload_policy import COSTCO_UPLOAD_POLICY
@@ -16,6 +17,7 @@ environment = jinja2.Environment(
 )
 template_index = environment.get_template("index.html")
 template_costco = environment.get_template("costco.html")
+template_costco_payroll = environment.get_template("costco_payroll.html")
 template_raccoon = environment.get_template("raccoon.html")
 template_sales = environment.get_template("sales.html")
 EXCEL_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -44,6 +46,11 @@ def costco_get() -> HTMLResponse:
     return HTMLResponse(content=html)
 
 
+@app.get("/costco-payroll", response_class=HTMLResponse)
+def costco_payroll_get() -> HTMLResponse:
+    return HTMLResponse(content=template_costco_payroll.render())
+
+
 @app.get("/sales", response_class=HTMLResponse)
 def sales_get() -> HTMLResponse:
     html = template_sales.render()
@@ -66,6 +73,17 @@ def costco_post(
 ) -> Response:
     """Process Costco analysis - delegates to app.routes.costco"""
     return process_costco_analysis(files, store_file)
+
+
+@app.post(
+    "/costco-payroll",
+    response_class=Response,
+    responses=DOWNLOAD_RESPONSES,
+)
+def costco_payroll_post(
+    files: Annotated[list[UploadFile] | None, File()] = None,
+) -> Response:
+    return process_costco_payroll(files)
 
 
 @app.post("/raccoon", response_class=HTMLResponse)
