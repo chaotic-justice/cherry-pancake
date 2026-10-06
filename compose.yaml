@@ -1,0 +1,47 @@
+services:
+  app:
+    build: .
+    user: "${HOST_UID:-501}:${HOST_GID:-20}"
+    init: true
+    ports:
+      - "${CHERRY_PORT:-8000}:8000"
+    environment:
+      CHERRY_DB_PATH: /data/cherry-pancake.db
+    volumes:
+      - ./.local-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.0
+    user: "${HOST_UID:-501}:${HOST_GID:-20}"
+    command:
+      - tunnel
+      - run
+      - --url
+      - http://app:8000
+      - --credentials-file
+      - /etc/cloudflared/credentials.json
+      - 8287ee62-8ec3-4770-867d-b69a050e88aa
+    volumes:
+      - ${HOME}/.cloudflared/8287ee62-8ec3-4770-867d-b69a050e88aa.json:/etc/cloudflared/credentials.json:ro
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped

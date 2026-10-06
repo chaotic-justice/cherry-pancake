@@ -1,5 +1,10 @@
+import base64
+import os
+import re
+import tempfile
 import unittest
 from io import BytesIO
+from unittest.mock import patch
 
 import pandas as pd
 from fastapi.testclient import TestClient
@@ -167,13 +172,30 @@ class EndpointTest(unittest.TestCase):
         self.assertIn("analysisForm.dataset.reportSuffixes", script.text)
         self.assertIn("analysisForm.dataset.storeUpdateSuffixes", script.text)
 
-    def test_costco_payroll_page_and_download_contract(self):
+    def test_costco_payroll_page_and_html_report_contract(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        environment = patch.dict(
+            os.environ,
+            {"CHERRY_DB_PATH": f"{directory.name}/payroll.db"},
+        )
+        environment.start()
+        self.addCleanup(environment.stop)
         page = self.client.get("/costco-payroll")
+        payroll_columns = [
+            "Show #",
+            "Whs. #",
+            "Location",
+            "State",
+            "Start Date",
+            "End Date",
+            "Sales Person",
+        ]
         payroll = BytesIO()
         with pd.ExcelWriter(payroll, engine="openpyxl") as writer:
             pd.DataFrame(
                 [[1, 2, "Albany", "NY", "10.01.26", "10.10.26", "Jane"]],
-                columns=["Show #", "Whs. #", "Location", "State", "Start Date", "End Date", "Sales Person"],
+                columns=payroll_columns,
             ).to_excel(writer, index=False, startrow=2)
             writer.sheets["Sheet1"]["A2"] = "Costco Payroll"
 
@@ -192,11 +214,44 @@ class EndpointTest(unittest.TestCase):
         self.assertIn('multiple', page.text)
         self.assertIn('<div class="workflow-actions">', page.text)
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Costco_Payroll_Master_2026-10-04.xlsx", response.headers["content-disposition"])
+        self.assertTrue(response.headers["content-type"].startswith("text/html"))
+        self.assertIn("Payroll master results", response.text)
+        self.assertIn("1 final", response.text)
+        self.assertIn("0 need review", response.text)
+        match = re.search(
+            r'href="data:[^;]+;base64,([^"]+)"[^>]+download="([^"]+)"',
+            response.text,
+        )
+        self.assertIsNotNone(match)
+        content, filename = match.groups()
+        self.assertEqual(filename, "Costco_Payroll_Master_2026-10-04.xlsx")
         self.assertEqual(
-            load_workbook(BytesIO(response.content)).sheetnames,
+            load_workbook(BytesIO(base64.b64decode(content))).sheetnames,
             ["Payroll Master", "Needs Review", "Source Rows"],
         )
+        persisted = self.client.get("/costco-payroll")
+        self.assertIn("Payroll master results", persisted.text)
+        self.assertIn("1 stored workbook", persisted.text)
+
+        next_month = BytesIO()
+        with pd.ExcelWriter(next_month, engine="openpyxl") as writer:
+            pd.DataFrame(
+                [[2, 3, "Buffalo", "NY", "10.15.26", "10.24.26", "Alex"]],
+                columns=payroll_columns,
+            ).to_excel(writer, index=False, startrow=2)
+            writer.sheets["Sheet1"]["A2"] = "Costco Payroll"
+        rolling = self.client.post(
+            "/costco-payroll",
+            files={
+                "files": (
+                    "10.18.26.xlsx",
+                    next_month.getvalue(),
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+            },
+        )
+        self.assertIn("2 master rows", rolling.text)
+        self.assertIn("2 stored workbooks", rolling.text)
 
     def test_openapi_declares_real_response_types(self):
         paths = app.openapi()["paths"]

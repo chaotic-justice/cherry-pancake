@@ -1,0 +1,8 @@
+.git
+.local-data
+.venv
+raw-data
+**/__pycache__
+**/*.py[cod]
+tests
+.DS_Store

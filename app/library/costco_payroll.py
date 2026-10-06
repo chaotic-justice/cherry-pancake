@@ -11,7 +11,7 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 
-from app.library.costco_analysis import GeneratedWorkbook
+from app.library.costco_analysis import EXCEL_MEDIA_TYPE
 
 
 MAX_FILES = 30
@@ -112,15 +112,23 @@ class PayrollFile:
     body: BinaryIO
 
 
+@dataclass(frozen=True)
+class PayrollReport:
+    body: bytes
+    download_name: str
+    master: tuple[dict, ...]
+    review: tuple[dict, ...]
+    source_count: int
+    media_type: str = EXCEL_MEDIA_TYPE
+
+
 class PayrollInputError(ValueError):
     """An input error safe to show to the user."""
 
 
-def build_costco_payroll_master(files: Sequence[PayrollFile]) -> GeneratedWorkbook:
+def build_costco_payroll_master(files: Sequence[PayrollFile]) -> PayrollReport:
     if not files:
         raise PayrollInputError("Choose at least one Costco payroll XLSX file.")
-    if len(files) > MAX_FILES:
-        raise PayrollInputError(f"Choose no more than {MAX_FILES} payroll files.")
 
     records: list[dict] = []
     for uploaded in files:
@@ -268,7 +276,7 @@ def _signature(record: dict) -> tuple:
     return tuple(_key_value(record.get(column)) for column in OUTPUT_COLUMNS[5:])
 
 
-def _write_workbook(master: list[dict], review: list[dict], records: list[dict]) -> GeneratedWorkbook:
+def _write_workbook(master: list[dict], review: list[dict], records: list[dict]) -> PayrollReport:
     workbook = Workbook()
     workbook.remove(workbook.active)
     _append_sheet(workbook, "Payroll Master", master, OUTPUT_COLUMNS)
@@ -287,9 +295,12 @@ def _write_workbook(master: list[dict], review: list[dict], records: list[dict])
     output = BytesIO()
     workbook.save(output)
     latest_date = max(record["Payroll Date"] for record in records)
-    return GeneratedWorkbook(
+    return PayrollReport(
         body=output.getvalue(),
         download_name=f"Costco_Payroll_Master_{latest_date.isoformat()}.xlsx",
+        master=tuple(master),
+        review=tuple(review),
+        source_count=len(records),
     )
 
 

@@ -1,5 +1,5 @@
 from app.routes.costco import process_costco_analysis
-from app.routes.costco_payroll import process_costco_payroll
+from app.routes.costco_payroll import process_costco_payroll, show_costco_payroll
 from app.routes.raccoon import process_raccoon_analysis
 from app.routes.sales import process_sales_analysis
 from app.library.costco_upload_policy import COSTCO_UPLOAD_POLICY
@@ -48,7 +48,7 @@ def costco_get() -> HTMLResponse:
 
 @app.get("/costco-payroll", response_class=HTMLResponse)
 def costco_payroll_get() -> HTMLResponse:
-    return HTMLResponse(content=template_costco_payroll.render())
+    return show_costco_payroll(template_costco_payroll)
 
 
 @app.get("/sales", response_class=HTMLResponse)
@@ -77,13 +77,13 @@ def costco_post(
 
 @app.post(
     "/costco-payroll",
-    response_class=Response,
-    responses=DOWNLOAD_RESPONSES,
+    response_class=HTMLResponse,
+    responses={400: {"content": {"text/html": {}}}},
 )
 def costco_payroll_post(
     files: Annotated[list[UploadFile] | None, File()] = None,
-) -> Response:
-    return process_costco_payroll(files)
+) -> HTMLResponse:
+    return process_costco_payroll(template_costco_payroll, files)
 
 
 @app.post("/raccoon", response_class=HTMLResponse)

@@ -4,7 +4,7 @@
 
 Add a `Costco payroll master` workflow to Cherry Pancake. The user downloads and unzips the shared Google Drive folder, uploads the resulting XLSX files, and receives one dated workbook in which provisional advances are superseded by later finalized payroll rows that include sales and commission information.
 
-This meets the email's goal without adding Google OAuth, a database, a scheduler, or another deployed service.
+This meets the email's goal without Google OAuth, a scheduler, or another deployed service. SQLite retains source workbook revisions for rolling monthly updates.
 
 ## User flow
 
@@ -12,10 +12,10 @@ This meets the email's goal without adding Google OAuth, a database, a scheduler
 2. Open `/costco-payroll` in Cherry Pancake.
 3. Choose the XLSX files and select `Build payroll master`.
 4. If no usable payroll tables exist, receive a plain-language error naming the affected files.
-5. Download `Costco_Payroll_Master_<latest-payroll-date>.xlsx`.
-6. Review the `Needs Review` sheet before using the `Payroll Master` sheet.
+5. Review the combined payroll master and unresolved rows in the browser.
+6. Download `Costco_Payroll_Master_<latest-payroll-date>.xlsx` for the full audit workbook.
 
-No uploaded file or generated workbook is retained by the application.
+Valid source workbooks are retained in SQLite; generated reports and downloads are rebuilt on demand.
 
 ## Input contract
 
@@ -102,8 +102,8 @@ Freeze headers, enable filters, format dates/currency/percentages, and size colu
 
 ## HTTP and UI shape
 
-- `GET /costco-payroll`: render the upload page.
-- `POST /costco-payroll`: accept `files`, return XLSX on success and a user-fixable HTML error with status 400 on invalid input.
+- `GET /costco-payroll`: render the upload page and rebuild the latest saved report when history exists.
+- `POST /costco-payroll`: accept `files`, render the HTML payroll report with an embedded XLSX download on success, and return a user-fixable HTML error with status 400 on invalid input.
 - Add one home-page tool row: `Costco payroll master`.
 - Reuse the existing base layout, file-picker styles, response contract, and server-rendered form fallback.
 - Client JavaScript only mirrors file-count/type/size checks and enables the submit button; server validation remains authoritative.
@@ -128,9 +128,11 @@ Reuse pandas, openpyxl, and FastAPI; add no dependency.
 
 1. **Parser:** load each XLSX active sheet, find its two payroll regions, and normalize fields.
 2. **Resolver:** apply identity, exact-duplicate, provisional/final, date-precedence, and ambiguity rules.
-3. **Workbook:** generate the three output sheets with lineage and formatting.
-4. **Web workflow:** add the route, template, home link, and minimal client checks.
-5. **Verification:** run the full Python test suite and JavaScript syntax check; manually test a folder export containing the `9.18.26` and `10.04.26` examples.
+3. **Persistence:** save immutable XLSX revisions in SQLite and rebuild from the latest revision of each filename.
+4. **Workbook:** generate the three output sheets with lineage and formatting.
+5. **Web workflow:** add the route, template, home link, and minimal client checks.
+6. **Deployment:** run the app with Docker Compose and mount `.local-data` at `/data`.
+7. **Verification:** run the full Python test suite and JavaScript syntax check; manually test a folder export containing the `9.18.26` and `10.04.26` examples.
 
 Each step should leave its smallest runnable test before moving on.
 
@@ -150,4 +152,4 @@ Each step should leave its smallest runnable test before moving on.
 
 1. The active worksheet is the current payroll source; repeated `paid` and `Sheet3` tabs are stale copies in the supplied 2026 files.
 2. `Copy of` files are later revisions of the same dated workbook. If naming stops carrying revision order, add explicit version metadata.
-3. The service returns XLSX rather than publishing a live Google Sheet, avoiding credentials and persistent storage.
+3. The service returns XLSX rather than publishing a live Google Sheet, avoiding Drive credentials; SQLite stores the source history locally.

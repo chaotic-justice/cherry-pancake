@@ -11,3 +11,118 @@
         max-width: 620px;
     }
 }
+
+.payroll-page {
+    width: min(100% - 2rem, 1240px);
+}
+
+.payroll-report {
+    margin-top: var(--space-2xl);
+    padding: var(--space-lg);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: 0 4px 8px rgb(87 57 34 / 12%);
+}
+
+.report-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-lg);
+    justify-content: space-between;
+}
+
+.report-heading h2,
+.review-panel h3,
+.payroll-report > h3 {
+    margin-top: 0;
+}
+
+.report-heading p,
+.review-panel p {
+    margin-bottom: 0;
+    color: var(--muted);
+}
+
+.report-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm) var(--space-lg);
+    margin-block: var(--space-lg);
+    padding-block: var(--space-md);
+    border-block: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+}
+
+.review-panel {
+    margin-bottom: var(--space-xl);
+    padding: var(--space-md);
+    border: 1px solid var(--review);
+    border-radius: var(--radius-sm);
+    background: #f7edf3;
+}
+
+.report-table-wrap {
+    overflow-x: auto;
+}
+
+.report-table {
+    width: 100%;
+    min-width: 1180px;
+    border-collapse: collapse;
+    font-size: .8125rem;
+}
+
+.review-panel .report-table {
+    min-width: 760px;
+    margin-top: var(--space-md);
+}
+
+.report-table th,
+.report-table td {
+    padding: var(--space-sm);
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+}
+
+.report-table th {
+    background: var(--surface-raised);
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.report-table tbody tr:nth-child(even) {
+    background: #fcf4e8;
+}
+
+.report-table .amount {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.report-status {
+    display: inline-block;
+    border-radius: 999px;
+    padding: .15rem .45rem;
+    background: #e5f0e9;
+    color: var(--success);
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.report-status-provisional {
+    background: #f7ebcd;
+    color: var(--warning);
+}
+
+@media (max-width: 640px) {
+    .report-heading {
+        flex-direction: column;
+    }
+
+    .report-heading .download {
+        width: 100%;
+    }
+}

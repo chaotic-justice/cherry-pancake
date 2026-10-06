@@ -55,7 +55,9 @@ Downloads should appear as soon as processing finishes, use predictable filename
 ### Costco payroll master
 
 - Accepts dated Excel payroll workbooks after the user unzips the Drive download.
+- Saves immutable workbook revisions in SQLite and rebuilds from the latest version of each filename.
 - Keeps finalized payroll rows over matching advance-payment rows.
+- Displays the combined payroll master and review exceptions in the browser.
 - Produces a master, a review queue, and a complete source-row audit trail.
 
 ### Salesperson performance
@@ -95,8 +97,8 @@ Target WCAG 2.1 AA:
 ## Data and operational constraints
 
 - The application is intended for a trusted single user.
-- Uploaded files are processed in memory and are not persisted by the application.
-- There is no database, authentication system, or multi-user state.
+- Uploaded files are processed in memory except Costco payroll workbooks, which are retained in SQLite for rolling reports.
+- There is no authentication system or multi-user state.
 - Current file-count and file-size boundaries are implementation safeguards, not a general-purpose document-storage policy.
 - Processing should fail with a useful response rather than silently producing a partial workbook.
 

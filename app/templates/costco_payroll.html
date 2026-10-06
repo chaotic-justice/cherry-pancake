@@ -2,20 +2,22 @@
 
 {% block title %}Costco Payroll Master | Cherry Pancake{% endblock %}
 
-{% block styles %}<link rel="stylesheet" href="/static/costco.css?v=20261006-cafe">{% endblock %}
+{% block styles %}<link rel="stylesheet" href="/static/costco.css?v=20261006-payroll-report">{% endblock %}
 
 {% block content %}
-<main class="app-shell tool-page">
+<main class="app-shell tool-page payroll-page">
     <a class="back-link" href="/">← Service Toolbox</a>
 
     <header class="page-header">
         <h1 class="page-title">Costco payroll master</h1>
-        <p class="page-intro">Combine dated Costco payroll workbooks and keep the latest final entry for each show.</p>
+        <p class="page-intro">Add monthly Costco payroll workbooks to the saved history and keep the latest final entry for each show.</p>
     </header>
+
+    {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 
     <form
         class="workflow"
-        action="/costco-payroll"
+        action="/costco-payroll#payroll-results"
         method="post"
         enctype="multipart/form-data"
         id="payroll-form"
@@ -24,7 +26,7 @@
     >
         <section class="workflow-section" aria-labelledby="payroll-files-heading">
             <h2 id="payroll-files-heading">Payroll workbooks</h2>
-            <p class="field-help">Choose up to 30 dated .xlsx files after unzipping the Google Drive download. Each file must be 5 MB or smaller.</p>
+            <p class="field-help">Choose up to 30 new dated .xlsx files. Previously saved workbooks are included automatically. Each file must be 5 MB or smaller.</p>
 
             <label class="file-picker" id="file-wrapper">
                 <input
@@ -51,9 +53,9 @@
         </section>
 
         <div class="workflow-actions">
-            <p class="action-note">Review the Needs Review sheet before using the payroll master.</p>
+            <p class="action-note">Valid uploads are saved and the complete payroll report is rebuilt.</p>
             <button type="submit" class="primary-action" id="build-btn" disabled>
-                Build and download master
+                Build payroll report
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M12 3v12"/>
                     <polyline points="7 10 12 15 17 10"/>
@@ -62,6 +64,107 @@
             </button>
         </div>
     </form>
+
+    {% if report %}
+    <section class="payroll-report" id="payroll-results" aria-labelledby="payroll-results-heading">
+        <div class="report-heading">
+            <div>
+                <h2 id="payroll-results-heading">Payroll master results</h2>
+                <p>Later final payroll rows replace matching advance-payment rows. Review exceptions before using the master.</p>
+            </div>
+            <a
+                class="download"
+                href="data:{{ download.media_type }};base64,{{ download.content }}"
+                download="{{ download.filename }}"
+            >Download Excel master</a>
+        </div>
+
+        <div class="report-summary" aria-label="Payroll summary">
+            <span><strong>{{ report.total }} master rows</strong></span>
+            <span><strong>{{ report.final }} final</strong></span>
+            <span><strong>{{ report.provisional }} provisional only</strong></span>
+            <span><strong>{{ report.review }} need review</strong></span>
+            <span><strong>{{ report.source }} source rows</strong></span>
+            <span><strong>{{ report.stored }} stored workbook{% if report.stored != 1 %}s{% endif %}</strong></span>
+            <span><strong>{{ report.revisions }} saved revision{% if report.revisions != 1 %}s{% endif %}</strong></span>
+        </div>
+
+        {% if report.review_rows %}
+        <section class="review-panel" aria-labelledby="payroll-review-heading">
+            <h3 id="payroll-review-heading">Needs review</h3>
+            <p>These rows were not added to the master because they could not be resolved safely.</p>
+            <div class="report-table-wrap">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Reason</th>
+                            <th scope="col">Payroll date</th>
+                            <th scope="col">Salesperson</th>
+                            <th scope="col">Show</th>
+                            <th scope="col">Location</th>
+                            <th scope="col">Source</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in report.review_rows %}
+                        <tr>
+                            <td>{{ row.reason }}</td>
+                            <td>{{ row.payroll_date }}</td>
+                            <td>{{ row.salesperson }}</td>
+                            <td>{{ row.show }}</td>
+                            <td>{{ row.location }}</td>
+                            <td>{{ row.source }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+
+        <h3>Payroll master</h3>
+        <div class="report-table-wrap">
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Payroll date</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Salesperson</th>
+                        <th scope="col">Show</th>
+                        <th scope="col">Warehouse</th>
+                        <th scope="col">Location</th>
+                        <th scope="col">Show dates</th>
+                        <th scope="col">Advance</th>
+                        <th scope="col">Net sales</th>
+                        <th scope="col">Commission earned</th>
+                        <th scope="col">Amount paid</th>
+                        <th scope="col">Arrears</th>
+                        <th scope="col">Source</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in report.rows %}
+                    <tr>
+                        <td>{{ row.payroll_date }}</td>
+                        <td><span class="report-status{% if row.status != 'Final' %} report-status-provisional{% endif %}">{{ row.status }}</span></td>
+                        <td>{{ row.salesperson }}</td>
+                        <td>{{ row.show }}</td>
+                        <td>{{ row.warehouse }}</td>
+                        <td>{{ row.location }}</td>
+                        <td>{{ row.show_dates }}</td>
+                        <td class="amount">{{ row.advance }}</td>
+                        <td class="amount">{{ row.net_sales }}</td>
+                        <td class="amount">{{ row.commission }}</td>
+                        <td class="amount">{{ row.amount_paid }}</td>
+                        <td class="amount">{{ row.arrears }}</td>
+                        <td>{{ row.source }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}
 </main>
 {% endblock %}
 
