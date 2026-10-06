@@ -4,9 +4,10 @@
 
 .raccoon-form {
     overflow: hidden;
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-strong);
     border-radius: var(--radius-md);
     background: var(--surface);
+    box-shadow: 0 4px 8px rgb(87 57 34 / 12%);
 }
 
 .uploads {
@@ -82,6 +83,11 @@
 
 .results {
     margin-top: var(--space-2xl);
+    padding: var(--space-lg);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    background: rgb(255 250 242 / 96%);
+    box-shadow: 0 4px 8px rgb(87 57 34 / 12%);
 }
 
 .results-header {
@@ -145,7 +151,7 @@
     padding: var(--space-md);
     border: 1px solid var(--warning);
     border-radius: var(--radius-sm);
-    background: #2c2619;
+    background: #f7ebcd;
 }
 
 .input-issues p {
@@ -241,17 +247,17 @@ td.amount {
 }
 
 .status-matched {
-    background: #183728;
+    background: #e2f1e8;
     color: var(--success);
 }
 
 .status-needs-review {
-    background: #3a2035;
+    background: #f3e2ec;
     color: var(--review);
 }
 
 .status-warning {
-    background: #3a3019;
+    background: #f7ebcd;
     color: var(--warning);
 }
 
@@ -287,6 +293,10 @@ td.amount {
     }
 
     .uploads {
+        padding: var(--space-md);
+    }
+
+    .results {
         padding: var(--space-md);
     }
 

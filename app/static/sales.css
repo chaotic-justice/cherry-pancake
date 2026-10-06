@@ -1,5 +1,10 @@
 .validation-section {
     margin-top: var(--space-xl);
+    padding: var(--space-lg);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    background: rgb(255 250 242 / 96%);
+    box-shadow: 0 4px 8px rgb(87 57 34 / 12%);
 }
 
 .validation-section h2 {
@@ -30,6 +35,10 @@
 }
 
 @media (max-width: 640px) {
+    .validation-section {
+        padding: var(--space-md);
+    }
+
     .validation-item {
         grid-template-columns: 1fr 1fr;
     }

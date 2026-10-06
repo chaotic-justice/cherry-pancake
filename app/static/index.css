@@ -4,23 +4,30 @@
 
 .home-header {
     display: flex;
-    max-width: 44rem;
+    max-width: 46rem;
     align-items: flex-start;
     gap: var(--space-md);
-    margin-bottom: var(--space-2xl);
+    margin-bottom: var(--space-xl);
+    padding: var(--space-lg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: rgb(255 250 242 / 94%);
+    box-shadow: 0 4px 8px rgb(87 57 34 / 10%);
 }
 
 .toolbox-mark {
     display: grid;
-    width: 48px;
-    height: 48px;
-    flex: 0 0 48px;
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
     place-items: center;
-    border-radius: var(--radius-md);
+    border: 2px solid #73301d;
+    border-radius: 50%;
     background: var(--accent-strong);
-    color: white;
+    color: #fffaf2;
     font-weight: 900;
     letter-spacing: -.02em;
+    box-shadow: inset 0 0 0 3px #d98c63;
 }
 
 .home-header .page-intro {
@@ -28,7 +35,11 @@
 }
 
 .tool-list {
-    border-top: 1px solid var(--border);
+    overflow: hidden;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    background: rgb(255 250 242 / 96%);
+    box-shadow: 0 4px 8px rgb(87 57 34 / 12%);
 }
 
 .tool-row {
@@ -38,15 +49,18 @@
     gap: var(--space-md);
     padding: var(--space-lg) var(--space-md);
     border-bottom: 1px solid var(--border);
-    border-radius: var(--radius-sm);
     color: var(--text);
     text-decoration: none;
     transition: background-color 180ms ease;
 }
 
+.tool-row:last-child {
+    border-bottom: 0;
+}
+
 .tool-row:hover,
 .tool-row:focus-visible {
-    background: var(--surface);
+    background: var(--surface-hover);
 }
 
 .tool-icon {
@@ -55,8 +69,8 @@
     height: 44px;
     place-items: center;
     border-radius: var(--radius-sm);
-    background: #263654;
-    color: var(--accent);
+    background: #ecd3bc;
+    color: var(--accent-strong);
 }
 
 .tool-icon-raccoon {
@@ -80,17 +94,21 @@
 
 .tool-format {
     font-size: .875rem;
-    font-weight: 700;
+    font-weight: 800;
     white-space: nowrap;
 }
 
 .tool-arrow {
-    color: var(--accent);
+    color: var(--accent-strong);
     font-size: 1.25rem;
 }
 
 .home-note {
+    display: inline-block;
     margin: var(--space-lg) 0 0;
+    padding: .35rem .6rem;
+    border-radius: var(--radius-sm);
+    background: rgb(255 250 242 / 82%);
     font-size: .875rem;
 }
 
@@ -100,12 +118,18 @@
     }
 
     .home-header {
-        margin-bottom: var(--space-xl);
+        margin-bottom: var(--space-md);
+        padding: var(--space-md);
+    }
+
+    .toolbox-mark {
+        width: 46px;
+        height: 46px;
+        flex-basis: 46px;
     }
 
     .tool-row {
         grid-template-columns: 44px minmax(0, 1fr) 20px;
-        padding-inline: 0;
     }
 
     .tool-format {

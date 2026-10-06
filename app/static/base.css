@@ -1,22 +1,22 @@
 :root {
-    color-scheme: dark;
-    --background: #0d1422;
-    --surface: #141e30;
-    --surface-raised: #19253a;
-    --surface-hover: #202e46;
-    --border: #35445d;
-    --border-strong: #596a84;
-    --text: #f7f9fc;
-    --muted: #b9c5d8;
-    --accent: #a9b7ff;
-    --accent-strong: #6679e8;
-    --accent-hover: #7588f2;
-    --success: #87dda7;
-    --warning: #f1cb78;
-    --danger: #ff9aa6;
-    --review: #efa8d1;
+    color-scheme: light;
+    --background: #f2e7d6;
+    --surface: #fffaf2;
+    --surface-raised: #f8eddd;
+    --surface-hover: #f2dfca;
+    --border: #cdb99c;
+    --border-strong: #a98d6c;
+    --text: #38291f;
+    --muted: #715d4d;
+    --accent: #a9482c;
+    --accent-strong: #8b3923;
+    --accent-hover: #6f2d1d;
+    --success: #356f52;
+    --warning: #8a5a18;
+    --danger: #a23d3d;
+    --review: #865375;
     --radius-sm: 8px;
-    --radius-md: 12px;
+    --radius-md: 14px;
     --space-xs: .5rem;
     --space-sm: .75rem;
     --space-md: 1rem;
@@ -41,10 +41,27 @@ body {
     margin: 0;
     background: var(--background);
     color: var(--text);
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, -apple-system, sans-serif;
     font-size: 1rem;
     line-height: 1.5;
     text-rendering: optimizeLegibility;
+}
+
+body::before {
+    position: fixed;
+    z-index: 0;
+    inset: 0;
+    background-image: url("/static/cat-dorayaki-paper.jpg?v=20261006");
+    background-position: center top;
+    background-size: 620px 620px;
+    content: "";
+    opacity: .22;
+    pointer-events: none;
+}
+
+body > * {
+    position: relative;
+    z-index: 1;
 }
 
 button,
@@ -80,8 +97,8 @@ svg {
     align-items: center;
     gap: var(--space-xs);
     margin-bottom: var(--space-xl);
-    color: var(--accent);
-    font-weight: 700;
+    color: var(--accent-strong);
+    font-weight: 800;
     text-decoration: none;
 }
 
@@ -92,6 +109,11 @@ svg {
 
 .page-header {
     margin-bottom: var(--space-xl);
+    padding: var(--space-lg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: rgb(255 250 242 / 94%);
+    box-shadow: 0 4px 8px rgb(87 57 34 / 10%);
 }
 
 .page-title {
@@ -113,9 +135,10 @@ svg {
 
 .workflow {
     overflow: hidden;
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-strong);
     border-radius: var(--radius-md);
     background: var(--surface);
+    box-shadow: 0 4px 8px rgb(87 57 34 / 12%);
 }
 
 .workflow-section {
@@ -151,7 +174,7 @@ svg {
     border-radius: var(--radius-md);
     background: var(--surface-raised);
     cursor: pointer;
-    transition: border-color 180ms ease, background-color 180ms ease;
+    transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
 }
 
 .file-picker:hover,
@@ -160,9 +183,14 @@ svg {
     background: var(--surface-hover);
 }
 
+.file-picker:active {
+    transform: translateY(1px);
+}
+
 .file-picker.active {
     border-style: solid;
     border-color: var(--success);
+    background: #edf6ef;
 }
 
 .file-picker input[type="file"] {
@@ -181,8 +209,8 @@ svg {
     flex: 0 0 auto;
     place-items: center;
     border-radius: var(--radius-sm);
-    background: #27365a;
-    color: var(--accent);
+    background: #ecd3bc;
+    color: var(--accent-strong);
 }
 
 .file-picker-copy {
@@ -192,7 +220,7 @@ svg {
 
 .file-picker-label {
     color: var(--text);
-    font-weight: 750;
+    font-weight: 800;
     overflow-wrap: anywhere;
 }
 
@@ -207,7 +235,7 @@ svg {
     gap: var(--space-md);
     justify-content: space-between;
     padding: var(--space-md) var(--space-lg);
-    background: #111a2a;
+    background: #f4e6d3;
 }
 
 .primary-action,
@@ -221,7 +249,7 @@ svg {
     border-radius: var(--radius-sm);
     padding: .75rem 1rem;
     background: var(--accent-strong);
-    color: white;
+    color: #fffaf2;
     font-weight: 800;
     text-decoration: none;
     cursor: pointer;
@@ -254,8 +282,8 @@ svg {
     padding: var(--space-md);
     border: 1px solid var(--danger);
     border-radius: var(--radius-sm);
-    background: #341b29;
-    color: #ffd8dd;
+    background: #fbe8e4;
+    color: #762727;
 }
 
 a:focus-visible,
@@ -268,10 +296,19 @@ summary:focus-visible,
 }
 
 @media (max-width: 640px) {
+    body::before {
+        background-size: 460px 460px;
+        opacity: .18;
+    }
+
     .app-shell,
     .tool-page {
         width: min(100% - 1.25rem, 1040px);
         padding-block: var(--space-md) var(--space-xl);
+    }
+
+    .page-header {
+        padding: var(--space-md);
     }
 
     .page-title {
@@ -298,7 +335,6 @@ summary:focus-visible,
     *::before,
     *::after {
         scroll-behavior: auto !important;
-        transition: none !important;
-        animation: none !important;
+        transition-duration: .01ms !important;
     }
 }

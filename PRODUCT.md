@@ -29,7 +29,7 @@ Use recognizable file pickers, explicit accepted formats, plain-language actions
 
 ### Calm and task-focused
 
-Keep the visual system practical, friendly, and compact. Preserve the dark navy identity and indigo accent while avoiding decorative gradients, glass effects, oversized cards, and dashboard ornament.
+Keep the visual system practical, friendly, and compact. Use the warm cat-café paper identity and persimmon accent without letting decoration compete with file workflows or review tables.
 
 ### Explain what the user can fix
 

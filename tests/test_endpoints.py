@@ -190,6 +190,7 @@ class EndpointTest(unittest.TestCase):
 
         self.assertEqual(page.status_code, 200)
         self.assertIn('multiple', page.text)
+        self.assertIn('<div class="workflow-actions">', page.text)
         self.assertEqual(response.status_code, 200)
         self.assertIn("Costco_Payroll_Master_2026-10-04.xlsx", response.headers["content-disposition"])
         self.assertEqual(
