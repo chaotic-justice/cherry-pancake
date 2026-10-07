@@ -103,8 +103,7 @@ def sales_post(
     file: Annotated[UploadFile | None, File()] = None,
 ) -> Response:
     """Process Sales analysis and download the generated workbook."""
-    response, _ = process_sales_analysis(file)
-    return response
+    return process_sales_analysis(file)
 
 
 if __name__ == "__main__":

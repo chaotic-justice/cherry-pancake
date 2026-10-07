@@ -2,8 +2,6 @@
 
 {% block title %}Salesperson Performance | Service Toolbox{% endblock %}
 
-{% block styles %}<link rel="stylesheet" href="/static/sales.css?v=20261006-cafe">{% endblock %}
-
 {% block content %}
 <main class="app-shell tool-page">
     <a class="back-link" href="/">← Service Toolbox</a>
@@ -53,20 +51,6 @@
             </button>
         </div>
     </form>
-
-    {% if validation %}
-    <section class="validation-section" aria-labelledby="validation-heading">
-        <h2 id="validation-heading">Validation results</h2>
-        {% for key, result in validation.items() %}
-        <div class="validation-item {{ 'matched' if result.matched else 'unmatched' }}">
-            <strong>{{ key.replace('-', ' ').title() }}</strong>
-            <span>Expected {{ "{:,.2f}".format(result.expected) }}</span>
-            <span>Actual {{ "{:,.2f}".format(result.actual) }}</span>
-            <span class="match-indicator">{{ 'Matched' if result.matched else 'Check total' }}</span>
-        </div>
-        {% endfor %}
-    </section>
-    {% endif %}
 </main>
 {% endblock %}
 

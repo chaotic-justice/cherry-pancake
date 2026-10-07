@@ -3,8 +3,6 @@ services:
     build: .
     user: "${HOST_UID:-501}:${HOST_GID:-20}"
     init: true
-    ports:
-      - "${CHERRY_PORT:-8000}:8000"
     environment:
       CHERRY_DB_PATH: /data/cherry-pancake.db
     volumes:
