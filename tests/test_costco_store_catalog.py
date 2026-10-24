@@ -38,8 +38,20 @@ class CostcoStoreCatalogTest(unittest.TestCase):
             StoreResolution("0766", "C11#0766", known=True),
         )
         self.assertEqual(
+            catalog.resolve_invoice("000117090426"),
+            StoreResolution("0117", "C10#117", known=True),
+        )
+        self.assertEqual(
+            catalog.resolve_invoice("000418090426"),
+            StoreResolution("0418", "C10#418", known=True),
+        )
+        self.assertEqual(
             catalog.resolve_invoice("1994441151"),
             StoreResolution("1994", "C991994", known=True),
+        )
+        self.assertEqual(
+            catalog.resolve_invoice("1996RGR320198"),
+            StoreResolution("1996", "C991996", known=True),
         )
         self.assertEqual(
             catalog.resolve_invoice("1997441151"),
@@ -51,7 +63,8 @@ class CostcoStoreCatalogTest(unittest.TestCase):
             StoreCatalogUpdate(
                 "stores.csv",
                 b"C4#0636,#636\nC4#636,#0636\n"
-                b"C9#0766,#0766\nC7#1994,#1994\nC2#999,#999\n",
+                b"C9#0766,#0766\nC7#1994,#1994\nC2#999,#999\n"
+                b"C10#0117,#117\n",
             )
         )
 
@@ -63,6 +76,7 @@ class CostcoStoreCatalogTest(unittest.TestCase):
             catalog.resolve_invoice("0999441151"),
             StoreResolution("0999", "C2#0999", known=True),
         )
+        self.assertEqual(catalog.resolve_invoice("000117090426").store_name, "C10#117")
         self.assertEqual(catalog.resolve_invoice("0766441151").store_name, "C11#0766")
         self.assertEqual(catalog.resolve_invoice("1994441151").store_name, "C991994")
 

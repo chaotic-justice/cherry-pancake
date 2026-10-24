@@ -19,6 +19,7 @@ _UNKNOWN_NAME = "Unknown"
 _AUTHORITATIVE_OVERRIDES = {
     "0766": "C11#0766",
     "1994": "C991994",
+    "1996": "C991996",
     "1997": "C991997",
     _UNKNOWN_KEY: _UNKNOWN_NAME,
 }
@@ -88,7 +89,7 @@ def _load_bundled_catalog() -> dict[str, str]:
             or not name.strip()
         ):
             raise StoreCatalogError("The bundled Costco store catalog is invalid.")
-        stores[key] = name.strip()
+        stores[key] = _normalize_customer_code(name) or name.strip()
     return stores
 
 
@@ -141,9 +142,10 @@ def _normalize_customer_code(value: object) -> str | None:
     customer_code = str(value).strip()
     if not customer_code:
         return None
+    store_width = 3 if customer_code.startswith("C10#") else 4
     return re.sub(
         r"#(\d+)$",
-        lambda match: f"#{match.group(1).zfill(4)}",
+        lambda match: f"#{match.group(1).lstrip('0').zfill(store_width)}",
         customer_code,
     )
 
